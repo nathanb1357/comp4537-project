@@ -1,7 +1,7 @@
 const dotenv = require('dotenv');
 const express = require('express');
 const { detectImage } = require('./controllers/api');
-const { register, login, authenticate } = require('./controllers/auth');
+const { register, login, resetPassword, authenticate } = require('./controllers/auth');
 
 const app = express();
 
@@ -10,6 +10,7 @@ dotenv.config();
 
 app.post('/auth/register', register);
 app.post('/auth/login', login);
+app.post('/auth/resetPassword', resetPassword);
 app.post('/api/detectImage', authenticate, detectImage);
 
 app.listen(process.env.PORT, process.env.HOST, () => {
