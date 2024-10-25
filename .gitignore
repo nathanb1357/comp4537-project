@@ -1,1 +1,2 @@
-server/model/sdxl-detector
+server/model/sdxl-detector/
+node_modules/
