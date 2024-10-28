@@ -4,6 +4,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const env = require('dotenv').config();
 const {passwordEmail} = require('./passwordEmail');
+const { verify } = require('crypto');
 
 
 const jwtSecret = process.env.JWT_SECRET;
@@ -111,6 +112,20 @@ async function resetPassword(req, res) {
   
 
 
+async function verifyToken(req, res) {
+  const { token } = req.params;
+  const tokens = await readTokens();
+  const tokenObj = tokens.find(t => t.token === token);
+
+  if (!tokenObj) return res.status(404).send('Token not found');
+
+  if (new Date(tokenObj.expiration) < new Date()) {
+    return res.status(403).send('Token expired');
+  }
+
+  const userEmail = tokenObj.email; 
+  res.redirect(`/your-specific-page?email=${encodeURIComponent(userEmail)}`);
+}
 
   
-  module.exports = { register, login, authenticateToken, resetPassword };
+  module.exports = { register, login, authenticateToken, resetPassword, verifyToken };

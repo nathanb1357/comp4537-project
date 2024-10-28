@@ -1,7 +1,8 @@
 const dotenv = require('dotenv');
 const express = require('express');
 const { detectImage } = require('./controllers/api');
-const { register, login, resetPassword, authenticate } = require('./controllers/auth');
+const { register, login, resetPassword, verifyToken, changePassword, authenticate } = require('./controllers/auth');
+const { verify } = require('jsonwebtoken');
 
 const app = express();
 
@@ -11,6 +12,8 @@ dotenv.config();
 app.post('/auth/register', register);
 app.post('/auth/login', login);
 app.get('/auth/resetPassword/:email', resetPassword);
+app.get('/auth/verifytoken/:token', verifyToken);
+app.post('/auth/resetPassword', changePassword);
 // app.post('/api/detectImage', authenticate, detectImage);
 
 app.listen(process.env.PORT, process.env.HOST, () => {
