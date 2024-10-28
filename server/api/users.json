@@ -1,0 +1,14 @@
+[
+  {
+    "email": "test@test.com",
+    "password": "$2a$10$Lgc2J3R5ySCNE3FqJzPAGexRLKTgM8ETcZBsIHG0T93yVcvIw0zsu"
+  },
+  {
+    "email": "deepdectiveisa@gmail.com",
+    "password": "$2a$10$as36utjr83rQ9I94zdSPDO3aKihrPL5gi6UNcsrjY7Jno7AYIgxri"
+  },
+  {
+    "email": "deepdetectiveisa@gmail.com",
+    "password": "$2a$10$XC374mEJIkSr2DU9sjNoKuVAX/8afIa9pFhZly00HewOLS/5EJCMq"
+  }
+]

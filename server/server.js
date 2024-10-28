@@ -10,9 +10,13 @@ dotenv.config();
 
 app.post('/auth/register', register);
 app.post('/auth/login', login);
-app.post('/auth/resetPassword', resetPassword);
-app.post('/api/detectImage', authenticate, detectImage);
+app.get('/auth/resetPassword/:email', resetPassword);
+// app.post('/api/detectImage', authenticate, detectImage);
 
 app.listen(process.env.PORT, process.env.HOST, () => {
     console.log(`Server running on ${process.env.HOST}: port ${process.env.PORT}!`)
+});
+
+app.listen(process.env.PORT, () => {
+    console.log(`Server running on port ${process.env.PORT}!`);
 });
