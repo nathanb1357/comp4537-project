@@ -18,7 +18,7 @@ document.getElementById("login").addEventListener("click", function() {
         .then(function(data) {
         if (data.success) {
             localStorage.setItem("token", data.token);
-            window.location.href = "signin.html";
+            window.location.href = "signedin.html";
             alert("Login successful");
         } else {
             alert("Login failed");
@@ -41,6 +41,8 @@ document.getElementById("signup").addEventListener("click", function() {
         })
         .then(function(data) {
         if (data.success) {
+            localStorage.setItem("token", data.token);
+            window.location.href = "signedin.html";
             alert("Signup successful");
         } else {
             alert("Signup failed");
