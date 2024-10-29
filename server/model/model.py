@@ -16,11 +16,19 @@ def predict(image_path):
     with torch.no_grad():
         outputs = model(**inputs)
 
-    # Get the predictions
+    # Apply softmax to get probabilities
     logits = outputs.logits
-    predicted_class = torch.argmax(logits, dim=-1).item()  # Get the class with the highest score
-    return predicted_class
+    probabilities = torch.nn.functional.softmax(logits, dim=-1).squeeze()
+
+    # Get the predicted class and its confidence
+    predicted_class = torch.argmax(probabilities).item()
+    confidence = probabilities[predicted_class].item()
+
+    # Convert probabilities to a dictionary for each class
+    class_confidences = {i: prob.item() for i, prob in enumerate(probabilities)}
+    return predicted_class, confidence, class_confidences
 
 
-# result = predict('server\model\\test.jpg')
-# print(result)
+# predicted_class, confidence, class_confidences = predict('server\model\\test.jpg')
+# print(f"Predicted class: {predicted_class} with confidence: {confidence}")
+# print("Confidence for each class:", class_confidences)
