@@ -1,8 +1,9 @@
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 from PIL import Image
 import torch
+import os
 
-MODEL_DIR = "server\model\sdxl-detector"
+MODEL_DIR = os.path.join("server", "model", "sdxl-detector")
 processor = AutoImageProcessor.from_pretrained(MODEL_DIR)
 model = AutoModelForImageClassification.from_pretrained(MODEL_DIR)
 
@@ -29,6 +30,7 @@ def predict(image_path):
     return predicted_class, confidence, class_confidences
 
 
-# predicted_class, confidence, class_confidences = predict('server\model\\test.jpg')
-# print(f"Predicted class: {predicted_class} with confidence: {confidence}")
-# print("Confidence for each class:", class_confidences)
+TEST_DIR = os.path.join("server", "model", "test.jpg")
+predicted_class, confidence, class_confidences = predict(TEST_DIR)
+print(f"Predicted class: {predicted_class} with confidence: {confidence}")
+print("Confidence for each class:", class_confidences)
