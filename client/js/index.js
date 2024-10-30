@@ -1,6 +1,6 @@
-const api = "http://localhost:3000";
+import api from "./const.js";
 
-
+const api = api;
 
 document.getElementById("login").addEventListener("click", function() {
     var username = document.getElementById("username").value;

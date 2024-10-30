@@ -1,3 +1,7 @@
+import api from "./const.js";
+
+const api = api;
+
 document.addEventListener("DOMContentLoaded", function () {
     const urlParams = new URLSearchParams(window.location.search);
     const resetToken = urlParams.get("token");
