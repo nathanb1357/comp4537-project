@@ -1,6 +1,4 @@
-import api from "./const.js";
-
-const api = api;
+import { api } from './const.js';
 
 document.getElementById("login").addEventListener("click", function() {
     var username = document.getElementById("username").value;

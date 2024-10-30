@@ -1,6 +1,5 @@
-import api from "./const.js";
+import { api } from './const.js';
 
-const api = api;
 
 document.addEventListener("DOMContentLoaded", function() {
       

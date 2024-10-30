@@ -1,7 +1,4 @@
-import api from "./const.js";
-
-const api = api;
-
+import { api } from './const.js';
 
 document.addEventListener("DOMContentLoaded", function () {
   // Retrieve and display profile data from localStorage
