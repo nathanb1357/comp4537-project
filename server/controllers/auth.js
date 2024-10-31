@@ -1,131 +1,118 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const fs = require('fs').promises;
-const path = require('path');
-const env = require('dotenv').config();
-const {passwordEmail} = require('./passwordEmail');
-const { verify } = require('crypto');
+const { passwordEmail } = require('./passwordEmail');
+const db = require('../db/db');
 
 
-const jwtSecret = process.env.JWT_SECRET;
-const usersFile = path.join(__dirname, '../api/users.json');
-const tokensFilePath = path.join(__dirname, '../api/tokens.json');
-
+/**
+ * Middleware to authenticate JWT token in request header.
+ * Checks if token exists, is valid or expired, allowing access to next route.
+ */
 function authenticateToken(req, res, next) {
   const token = req.headers['authorization']?.split(' ')[1];
-
-  if (!token) return res.status(401).send('Access denied');
+  if (!token) return res.status(401).send('Access denied.');
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-      if (err) return res.status(403).send('Invalid token');
-
+      if (err) return res.status(403).send('Invalid token.');
       req.user = user; 
       next();
   });
 }
 
-async function readUsers() {
-    try {
-      const data = await fs.readFile(usersFile, 'utf8');
-      return JSON.parse(data);
-    } catch (error) {
-      console.error('Error reading users.json:', error);
-      return [];
-    }
-  }
-  
-  async function writeUsers(users) {
-    try {
-      await fs.writeFile(usersFile, JSON.stringify(users, null, 2));
-    } catch (error) {
-      console.error('Error writing to users.json:', error);
-    }
-  }
-
-
+/**
+ * Register a new user in the database.
+ * Hashes the password and checks if user email already exists.
+ */
 async function register(req, res) {
     const { email, password } = req.body;
-    const users = await readUsers();
-  
-    if (users.find(user => user.email === email)) {
-      return res.status(409).send('User already exists'); /// 409 = Conflict
-    }
-  
     const hashedPassword = await bcrypt.hash(password, 10);
-    users.push({ email, password: hashedPassword });
-    await writeUsers(users);
-  
-    res.status(201).send('User registered successfully');
-  }
 
+    const userExistsQuery = 'SELECT * FROM User WHERE user_email = ?;';
+    const insertUserQuery = 'INSERT INTO User (user_email, user_pass) VALUES (?, ?);';
 
+    // Check if user with same email exists
+    db.query(userExistsQuery, [email], (err, results) => {
+        if (err) return res.status(500).send('Database error'); // Handle database error
+        if (results.length) return res.status(409).send('User already exists'); // Email already registered
+
+        db.query(insertUserQuery, [email, hashedPassword], (err) => {
+            if (err) return res.status(500).send('Database error'); // Handle database error during insertion
+            res.status(201).send('User registered successfully'); // Success response  
+        });
+    });
+}
+
+/**
+ * Authenticates an existing user during login.
+ * Verifies user credentials from the database, generates a JWT on success.
+ */
 async function login(req, res) {
     const { email, password } = req.body;
-    const users = await readUsers();
-    const user = users.find(u => u.email === email);
-  
-    if (!user) return res.status(404).send('User not found');
-  
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) return res.status(401).send('Invalid credentials');
-  
-    const token = jwt.sign({ email: user.email }, jwtSecret, { expiresIn: '1h' });
-    res.json({ token });
-  }
+    const userQuery = 'SELECT * FROM User WHERE user_email = ?;';
 
-async function readTokens() {
-  try {
-      const data = await fs.readFile(tokensFilePath, 'utf-8');
-      return JSON.parse(data);
-  } catch (error) {
-      return [];
-  }
+    db.query(userQuery, [email], async (err, results) => {
+        if (err) return res.status(500).send('Database error'); // Handle database error
+        if (!results.length) return res.status(404).send('User not found'); // No user found with the provided email
+    
+        const user = results[0];
+        const validPassword = await bcrypt.compare(password, user.user_pass);
+        if (!validPassword) return res.status(401).send('Invalid credentials'); // Password does not match
+    
+        // Generate a JWT token with user email and ID, valid for 1 hour
+        const token = jwt.sign({ userId: user.user_id, email: user.user_email }, jwtSecret, { expiresIn: '1h' });
+        res.json({ token });
+    });
 }
 
-async function saveTokens(tokens) {
-    await fs.writeFile(tokensFilePath, JSON.stringify(tokens, null, 2));
-}
-
-
+/**
+ * Sends a password reset token via email to the user.
+ * Generates a JWT token for password reset, stores it in the database with an expiry.
+ */
 async function resetPassword(req, res) {
-  const { email } = req.params;
-    const users = await readUsers();
-    const user = users.find(u => u.email === email);
+    const { email } = req.params;
 
-    console.log('email:', email);
+    const userQuery = 'SELECT * FROM User WHERE user_email = ?;';
+    const tokenQuery = 'INSERT INTO ResetToken (token, user_id, expiry) VALUES (?, ?, ?);';
+
+    db.query(userQuery, [email], (err, results) => {
+        if (err) return res.status(500).send('Database error'); // Handle database error
+        if (!results.length) return res.status(404).send('User not found'); // No user found with the provided email
+    
+        const token = jwt.sign({ email }, jwtSecret, { expiresIn: '1d' });
+        const expirationDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 1 day
+
+        db.query(tokenQuery, [token, results[0].user_id, expirationDate], (err) => {
+            if (err) return res.status(500).send('Database error'); // Handle database error
+            passwordEmail(email, token);
+
+            res.status(200).send('Password reset successfully');
+        });
+    }); 
+}
   
-    if (!user) return res.status(404).send('User not found');
 
-    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    const expirationDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day
-
-    const tokens = await readTokens();
-
-    tokens.push({ email, token, expiration: expirationDate });
-
-    await saveTokens(tokens);
-
-    passwordEmail(email, token);
-  
-    res.status(200).send('Password reset successfully');
-  }
-  
-
-
+/**
+ * Verifies a password reset token from the URL.
+ * Checks the token's validity and expiry date in the database.
+ */
 async function verifyToken(req, res) {
-  const { token } = req.params;
-  const tokens = await readTokens();
-  const tokenObj = tokens.find(t => t.token === token);
+    const { token } = req.params;
+    const tokenQuery = 'SELECT * FROM ResetToken WHERE token = ?;';
+    
+    db.query(tokenQuery, [token], (err, results) => {
+        if (err) return res.status(500).send('Database error'); // Handle database error
+        if (!results.length) return res.status(404).send('Token not found'); // Token not found in the database
 
-  if (!tokenObj) return res.status(404).send('Token not found');
+        const tokenObj = results[0]; // Get the token record
+        if (new Date(tokenObj.expiry) < new Date()) {
+            return res.status(403).send('Token expired'); // Token has expired
+        }
 
-  if (new Date(tokenObj.expiration) < new Date()) {
-    return res.status(403).send('Token expired');
-  }
-
-  const userEmail = tokenObj.email; 
-  res.redirect(`/your-specific-page?email=${encodeURIComponent(userEmail)}`);
+        // Redirect to a specific page, passing the user's email as a query parameter
+        const userEmail = tokenObj.user_id; 
+        res.redirect(`/your-specific-page?email=${encodeURIComponent(userEmail)}`);
+    });
 }
 
   
-  module.exports = { register, login, authenticateToken, resetPassword, verifyToken };
+module.exports = { register, login, authenticateToken, resetPassword, verifyToken };
