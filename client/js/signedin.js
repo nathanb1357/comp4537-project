@@ -20,21 +20,14 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    fetch(api + '/api/send-reset-email', {
-      method: 'POST',
+    fetch(api + '/auth/resetPassword/?email=' + email, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email: email })
+      }
     })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          alert("A password reset email has been sent to " + email + ".");
-        } else {
-          alert("Error sending password reset email. Please try again later.");
-        }
-        // Hide the modal after sending email
+      .then(response => {
+        alert(response.text()); 
         new bootstrap.Modal(document.getElementById("confirmModal")).hide();
       })
       .catch(error => {

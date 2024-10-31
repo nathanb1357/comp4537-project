@@ -60,32 +60,17 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("signupForm").addEventListener("submit", function (event) {
     event.preventDefault();
 
-    const username = document.getElementById("signupUsername").value;
     const email = document.getElementById("signupEmail").value;
     const password = document.getElementById("signupPassword").value;
 
-    fetch(api + '/auth/signup', {
+    fetch(api + '/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ username: username, email: email, password: password })
+      body: JSON.stringify({email: email, password: password })
     })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          localStorage.setItem("userToken", JSON.stringify(data.token)); // Store the token
-          if (data.userType == "admin") {
-            window.location.href = "signedinAdmin.html"; // Redirect to admin page
-          } else {
-            window.location.href = "signedinUser.html"; // Redirect to profile page
-          }
-          signupFormContainer.classList.add("d-none");
-          loginFormContainer.classList.remove("d-none");
-        } else {
-          alert("Signup failed: " + data.message);
-        }
-      })
+      .then(response => {alert(response.text());})
       .catch(error => {
         console.error("Error:", error);
         alert("An error occurred. Please try again.");

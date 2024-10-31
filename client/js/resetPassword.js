@@ -5,11 +5,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const urlParams = new URLSearchParams(window.location.search);
     const resetToken = urlParams.get("token");
 
-    if (!resetToken) {
-        alert("Invalid or missing token.");
-        window.location.href = "index.html"; // Redirect to home if no token
-        return;
-    }
+    fetch(api + '/auth/verifyToken/?token=' + resetToken, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => {
+            if (response.status == 500 || response.status == 404 || response.status == 403) {
+                alert(repsonse.text());
+                window.location.href = "index.html";
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred. Please try again.");
+        }
+
+        )
 
     const resetPasswordForm = document.getElementById("resetPasswordForm");
     resetPasswordForm.addEventListener("submit", function (event) {
