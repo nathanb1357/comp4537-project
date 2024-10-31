@@ -1,5 +1,4 @@
 const mysql = require('mysql2');
-const db = require('../db/db');
 
 class Database {
     constructor() {
@@ -40,7 +39,9 @@ class Database {
         });
     }
 
-    query(sql, params=[], callback) {
+    query(sql, params=[], callback = (err, results) => {
+        if (err) console.error("Query error:", err);
+    }) {
         this.pool.getConnection((err, connection) => {
             if (err) {
                 callback(err, null);
