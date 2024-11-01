@@ -21,6 +21,12 @@ app.get('/auth/verifytoken/:token', verifyToken);
 // app.post('/api/predictImage', authenticateToken, uploadImage, predictImage);
 // app.post('/api/getApiUsage', getApiUsage);
 
+
+// Test to see if API working
+app.get('/', (req, res) => {
+    res.send('Welcome to the API server');
+});
+
 app.listen(process.env.PORT, process.env.HOST, () => {
     console.log(`Server running on ${process.env.HOST}: port ${process.env.PORT}!`)
 });
