@@ -15,7 +15,7 @@ exports.predictImage = (req, res) => {
   exec(`python server/model/model.py ${imagePath}`, (error, stdout, stderr) => {
     if (error) {
       console.error(`Error: ${error}`);
-      res.status(500).send('Server error');
+      res.status(500).send('Server error', error);
       return;
     }
 
