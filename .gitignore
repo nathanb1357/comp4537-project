@@ -1,2 +1,6 @@
 server/model/sdxl-detector/
 node_modules/
+server/db/testpool.js
+# env file
+.env
+server/.env
