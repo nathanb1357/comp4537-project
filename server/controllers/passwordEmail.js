@@ -1,9 +1,6 @@
 const sgMail = require('@sendgrid/mail')
-const env = require('dotenv').config();
-
 
 async function passwordEmail(email, token) {
-
     sgMail.setApiKey(process.env.SENDGRID_API_KEY)
     const msg = {
       to: email,
@@ -13,8 +10,7 @@ async function passwordEmail(email, token) {
         "url": `google.com?token=${token}`, 
       },
     };
-      sgMail
-        .send(msg)
+      sgMail.send(msg)
         .then(() => {
           console.log('Email sent')
         })

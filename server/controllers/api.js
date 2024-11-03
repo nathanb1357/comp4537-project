@@ -1,11 +1,24 @@
-const pool = require('../db/db');
+const db = require('../db/db');
+const multer = require('multer');
+const { exec } = require('child_process');
+const upload = multer({ dest: '../uploads/' });
 
-exports.detectImage = async (req, res) => {
-    const userId = req.user.userId;
-    const [user] = pool.execute('SELECT user_calls FROM User WHERE id = ?', [userId]);
-    const remainingCalls = user[0].user_calls;
 
-    if (remainingCalls === 0) {
+// Middleware to handle image uploads
+exports.uploadImage = upload.single('image');
 
+
+// Define the predictImage function
+exports.predictImage = (req, res) => {
+  const imagePath = req.file.path;
+
+  exec(`python server/model/model.py ${imagePath}`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error: ${error}`);
+      res.status(500).send('Server error');
+      return;
     }
-}
+
+    res.json({ prediction: stdout.trim() });
+  });
+};
