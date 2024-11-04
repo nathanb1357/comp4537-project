@@ -190,7 +190,40 @@ async function getUserInfo(req, res) {
     });
 }
 
+async function getAllUsers(req, res) {
+    // Extract the token from the Authorization header
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) return res.status(401).json({ message: 'Access token required' });
 
+    try {
+        // Verify token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Check if the role is admin
+        const userRoleQuery = 'SELECT user_role FROM User WHERE user_id = ?;';
+        db.query(userRoleQuery, [decoded.userId], (err, results) => {
+            if (err) return res.status(500).json({ message: `Database error: ${err}` });
+            if (!results.length || results[0].user_role !== 'admin') {
+                return res.status(403).json({ message: 'Access denied' });
+            }
+
+            // Query to get all users, excluding passwords
+            const allUsersQuery = 'SELECT user_id, user_email, user_role FROM User;';
+            db.query(allUsersQuery, (err, users) => {
+                if (err) return res.status(500).json({ message: `Database error: ${err}` });
+                
+                // Return all users' information, excluding passwords
+                res.status(200).json(users);
+            });
+        });
+    } catch (error) {
+        res.status(403).json({ message: 'Invalid or expired token' });
+    }
+}
+
+module.exports = { getAllUsers };
 
   
-module.exports = { register, login, authenticateToken, resetPassword, getUserInfo, changePassword };
+module.exports = { register, login, authenticateToken, resetPassword, getUserInfo, changePassword, getAllUsers };

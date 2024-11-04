@@ -4,7 +4,7 @@ const express = require('express');
 const db = require('./db/db');
 const cors = require('cors');
 const { uploadImage, predictImage } = require('./controllers/api');
-const { register, login, resetPassword,  authenticateToken, getUserInfo, changePassword} = require('./controllers/auth');
+const { register, login, resetPassword,  authenticateToken, getUserInfo, changePassword, getAllUsers} = require('./controllers/auth');
 
 async function startServer() {
     try {
@@ -23,6 +23,7 @@ async function startServer() {
         app.get('/auth/resetPassword/:email', resetPassword);
         app.post('/auth/resetPassword', changePassword);
         app.get('/auth/userinfo', authenticateToken, getUserInfo);
+        app.get('/auth/users', authenticateToken, getAllUsers);
         // app.post('/api/predictImage', authenticateToken, uploadImage, predictImage);
         // app.post('/api/getApiUsage', getApiUsage);
 
