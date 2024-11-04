@@ -78,7 +78,7 @@ async function resetPassword(req, res) {
         if (err) return res.status(500).send(`Database error: ${err}`); // Handle database error
         if (!results.length) return res.status(404).send('User not found'); // No user found with the provided email
     
-        const token = jwt.sign({ email }, jwtSecret, { expiresIn: '1d' });
+        const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
         const expirationDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 1 day
 
         db.query(tokenQuery, [token, results[0].user_id, expirationDate], (err) => {
