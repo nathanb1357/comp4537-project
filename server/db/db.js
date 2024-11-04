@@ -8,7 +8,6 @@ class Database {
             password: process.env.PASS,
             database: process.env.DB,
             port: process.env.PORT,
-            waitForConnections: true,
             connectionLimit: 10
         });
     }
@@ -39,20 +38,28 @@ class Database {
         });
     }
 
-    query(sql, params=[], callback = (err, results) => {
-        if (err) console.error("Query error:", err);
-    }) {
+    query(sql, params=[], callback) {
+        if (typeof callback !== 'function') {
+            callback = (err, results) => {
+                if (err) console.error("Query error:", err);
+            };
+        }
+    
         this.pool.getConnection((err, connection) => {
             if (err) {
-                callback(err, null);
+                console.error("Connection error:", err); // Log connection error
+                callback(err, null); // Pass connection error to callback
                 return;
             }
+    
             connection.query(sql, params, (queryErr, result) => {
-                connection.release();
+                connection.release(); // Always release the connection
+    
                 if (queryErr) {
-                    callback(queryErr, null);
+                    console.error("Query execution error:", queryErr); // Log query execution error
+                    callback(queryErr, null); // Pass query execution error to callback
                 } else {
-                    callback(null, result);
+                    callback(null, result); // Successful result
                 }
             });
         });

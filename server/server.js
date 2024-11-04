@@ -2,7 +2,12 @@ require('dotenv').config({ path:'./server/.env' });
 
 const express = require('express');
 const db = require('./db/db');
-db.initializeTables();
+db.initializeTables((err) => {
+    if (err) {
+        console.error('Error initializing tables:', err);
+        process.exit(1); // Exit the application if DB initialization fails
+    }
+});
 
 const { uploadImage, predictImage } = require('./controllers/api');
 const { register, login, resetPassword, verifyToken, authenticateToken} = require('./controllers/auth');
@@ -25,6 +30,17 @@ app.get('/', (req, res) => {
     res.send('Welcome to the API server');
 });
 
-app.listen(process.env.PORT, process.env.HOST, () => {
-    console.log(`Server running on ${process.env.HOST}: port ${process.env.PORT}!`)
-});
+async function startServer() {
+    try {
+        await db.initializeTables().then(
+            app.listen(PORT, HOST, () => {
+                console.log(`Server running on ${HOST}: port ${PORT}!`);
+            })
+        );
+    } catch (error) {
+        console.error('Error initializing tables:', error);
+        process.exit(1);
+    }
+}
+
+startServer();
