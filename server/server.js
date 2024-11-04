@@ -24,7 +24,7 @@ async function startServer() {
             res.send('Welcome to the API server');
         });
 
-        app.listen(PORT, HOST, () => {
+        app.listen(process.env.PORT, process.env.HOST, () => {
             console.log(`Server running on ${HOST}: port ${PORT}!`);
         });
     } catch (error) {
