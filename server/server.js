@@ -4,7 +4,7 @@ const express = require('express');
 const db = require('./db/db');
 const cors = require('cors');
 const { uploadImage, predictImage } = require('./controllers/api');
-const { register, login, resetPassword, verifyToken, authenticateToken} = require('./controllers/auth');
+const { register, login, resetPassword} = require('./controllers/auth');
 
 async function startServer() {
     try {
