@@ -2,6 +2,8 @@ require('dotenv').config({ path: './server/.env' });
 
 const express = require('express');
 const db = require('./db/db');
+const { uploadImage, predictImage } = require('./controllers/api');
+const { register, login, resetPassword, verifyToken, authenticateToken} = require('./controllers/auth');
 
 async function startServer() {
     try {
