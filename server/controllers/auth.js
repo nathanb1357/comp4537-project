@@ -209,7 +209,7 @@ async function getAllUsers(req, res) {
                 return res.status(403).json({ message: 'Access denied' });
             }
 
-            const allUsersQuery = 'SELECT user_id, user_email, user_role FROM User;';
+            const allUsersQuery = 'SELECT user_id, user_email, user_calls, user_role FROM User;';
             db.query(allUsersQuery, (err, users) => {
                 if (err) return res.status(500).json({ message: `Database error: ${err}` });
                 
