@@ -6,6 +6,8 @@
   <title>User Profile</title>
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
 
@@ -22,7 +24,7 @@
             <a class="nav-link" href="index.html">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="logout.html">Logout</a>
+            <a class="nav-link" id="resetPasswordButton">Logout</a>
           </li>
         </ul>
       </div>
@@ -34,16 +36,12 @@
     <h2 class="mb-4">Profile</h2>
     <div class="card p-4">
       <div class="mb-3">
-        <label for="profileUsername" class="form-label">Username</label>
-        <p id="profileUsername" class="form-control-plaintext"></p>
+        <label for="profileUsername" class="form-label">Api Usage</label>
+        <p id="apiUsage" class="form-control-plaintext"></p>
       </div>
       <div class="mb-3">
         <label for="profileEmail" class="form-label">Email</label>
         <p id="profileEmail" class="form-control-plaintext"></p>
-      </div>
-      <div class="mb-3">
-        <label for="profileBio" class="form-label">Bio</label>
-        <p id="profileBio" class="form-control-plaintext"></p>
       </div>
       <button id="resetPasswordButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmModal">Send Password Reset Email</button>
     </div>
@@ -72,9 +70,6 @@
   <footer class="bg-dark text-white text-center py-3">
     <p class="mb-0">&copy; 2024 YourBrand. All rights reserved.</p>
   </footer>
-
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- JavaScript to Load Profile Data and Handle Password Reset Email -->
   <script type="module" src="js/signedin.js"></script>
