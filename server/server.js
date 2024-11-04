@@ -4,7 +4,7 @@ const express = require('express');
 const db = require('./db/db');
 const cors = require('cors');
 const { uploadImage, predictImage } = require('./controllers/api');
-const { register, login, resetPassword, verifyToken, authenticateToken} = require('./controllers/auth');
+const { register, login, resetPassword,  authenticateToken, getUserInfo, changePassword} = require('./controllers/auth');
 
 async function startServer() {
     try {
@@ -21,13 +21,19 @@ async function startServer() {
         app.post('/auth/register', register);
         app.post('/auth/login', login);
         app.get('/auth/resetPassword/:email', resetPassword);
-        app.get('/auth/verifytoken/:token', verifyToken);
-        // app.post('/auth/resetPassword', changePassword);
+        app.post('/auth/resetPassword', changePassword);
+        app.get('/auth/userinfo', authenticateToken, getUserInfo);
         // app.post('/api/predictImage', authenticateToken, uploadImage, predictImage);
         // app.post('/api/getApiUsage', getApiUsage);
 
         app.get('/', (req, res) => {
             res.send('Welcome to the API server');
+        });
+
+        // Error handling middleware
+        app.use((err, req, res, next) => {
+            console.error(err.stack);
+            res.status(500).json({ error: 'Something went wrong!' });
         });
 
         app.listen(process.env.PORT, process.env.HOST, () => {
