@@ -32,15 +32,14 @@ app.get('/', (req, res) => {
 
 async function startServer() {
     try {
-        await db.initializeTables().then(
-            app.listen(PORT, HOST, () => {
-                console.log(`Server running on ${HOST}: port ${PORT}!`);
-            })
-        );
+        db.initializeTables();
+        app.listen(PORT, HOST, () => {
+            console.log(`Server running on ${HOST}: port ${PORT}!`);
+        });
     } catch (error) {
         console.error('Error initializing tables:', error);
         process.exit(1);
     }
 }
 
-startServer();
+startServer()
