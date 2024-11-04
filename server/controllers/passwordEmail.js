@@ -8,7 +8,7 @@ async function passwordEmail(email, token) {
       from: process.env.GMAIL_USER, 
       templateId: process.env.RECOVERY_TMEPLATE_EMAIL_ID, 
       dynamicTemplateData: {
-        "url": `${process.env.BASE_URL}resetpassword?token=${token}&email=${email}`, 
+        "url": `${process.env.BASE_URL}resetPassword.html/?token=${token}&email=${email}`, 
       },
     };
     try {
