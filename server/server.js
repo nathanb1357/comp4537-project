@@ -25,7 +25,7 @@ async function startServer() {
         });
 
         app.listen(process.env.PORT, process.env.HOST, () => {
-            console.log(`Server running on ${HOST}: port ${PORT}!`);
+            console.log(`Server running on ${process.env.HOST}: port ${process.env.PORT}!`);
         });
     } catch (error) {
         console.error('Error initializing tables:', error);
