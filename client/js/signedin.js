@@ -3,6 +3,11 @@ import { api } from './const.js';
 document.addEventListener("DOMContentLoaded", function () {
   // Retrieve and display profile data from localStorage
   const userData = JSON.parse(localStorage.getItem("userToken"));
+  //check if token is still valid 
+  if (userData.expiry < Date.now()) {
+    alert("Your session has expired. Please log in again.");
+    window.location.href = "index.html";
+  }
   if (userData) {
     document.getElementById("profileUsername").textContent = userData.username || "N/A";
     document.getElementById("profileEmail").textContent = userData.email || "N/A";
