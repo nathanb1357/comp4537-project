@@ -8,11 +8,6 @@ const { register, login, resetPassword, verifyToken, authenticateToken} = requir
 async function startServer() {
     try {
         await db.initializeTables();
-        const PORT = process.env.PORT || 3002;
-        const HOST = process.env.HOST || '0.0.0.0';
-
-        console.log('PORT:', PORT);
-        console.log('HOST:', HOST);
 
         const app = express();
         app.use(express.json());

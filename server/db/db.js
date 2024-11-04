@@ -8,7 +8,6 @@ class Database {
             user: process.env.USER,
             password: process.env.PASS,
             database: process.env.DB,
-            port: process.env.PORT,
             connectionLimit: 10
         });
     }
