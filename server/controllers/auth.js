@@ -59,7 +59,7 @@ async function login(req, res) {
         if (!validPassword) return res.status(401).send('Invalid credentials: passwords dont match'); // Password does not match
     
         // Generate a JWT token with user email and ID, valid for 1 hour
-        const token = jwt.sign({ userId: user.user_id, email: user.user_email }, jwtSecret, { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user.user_id, email: user.user_email }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.json({ token });
     });
 }
