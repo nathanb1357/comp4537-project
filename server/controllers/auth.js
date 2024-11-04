@@ -32,11 +32,11 @@ async function register(req, res) {
 
     // Check if user with same email exists
     db.query(userExistsQuery, [email], (err, results) => {
-        if (err) return res.status(500).send('Database error', err); // Handle database error
+        if (err) return res.status(500).send(`Database error: ${err}`); // Handle database error
         if (results.length) return res.status(409).send('User already exists'); // Email already registered
 
         db.query(insertUserQuery, [email, hashedPassword], (err) => {
-            if (err) return res.status(500).send('Database error', err); // Handle database error during insertion
+            if (err) return res.status(500).send(`Database error: ${err}`); // Handle database error during insertion
             res.status(201).send('User registered successfully'); // Success response  
         });
     });
@@ -51,7 +51,7 @@ async function login(req, res) {
     const userQuery = 'SELECT * FROM User WHERE user_email = ?;';
 
     db.query(userQuery, [email], async (err, results) => {
-        if (err) return res.status(500).send('Database error', err); // Handle database error
+        if (err) return res.status(500).send(`Database error: ${err}`); // Handle database error
         if (!results.length) return res.status(404).send('User not found'); // No user found with the provided email
     
         const user = results[0];
@@ -75,14 +75,14 @@ async function resetPassword(req, res) {
     const tokenQuery = 'INSERT INTO ResetToken (token, user_id, expiry) VALUES (?, ?, ?);';
 
     db.query(userQuery, [email], (err, results) => {
-        if (err) return res.status(500).send('Database error', err); // Handle database error
+        if (err) return res.status(500).send(`Database error: ${err}`); // Handle database error
         if (!results.length) return res.status(404).send('User not found'); // No user found with the provided email
     
         const token = jwt.sign({ email }, jwtSecret, { expiresIn: '1d' });
         const expirationDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 1 day
 
         db.query(tokenQuery, [token, results[0].user_id, expirationDate], (err) => {
-            if (err) return res.status(500).send('Database error', err); // Handle database error
+            if (err) return res.status(500).send(`Database error: ${err}`); // Handle database error
             passwordEmail(email, token);
 
             res.status(200).send('Password reset successfully');
@@ -100,7 +100,7 @@ async function verifyToken(req, res) {
     const tokenQuery = 'SELECT * FROM ResetToken WHERE token = ?;';
     
     db.query(tokenQuery, [token], (err, results) => {
-        if (err) return res.status(500).send('Database error', err); // Handle database error
+        if (err) return res.status(500).send(`Database error: ${err}`); // Handle database error
         if (!results.length) return res.status(404).send('Token not found'); // Token not found in the database
 
         const tokenObj = results[0]; // Get the token record
