@@ -71,7 +71,19 @@ const predictImage = (req, res) => {
         return res.status(500).send(`Server error ${error}`);
       }
 
-      res.json({ prediction: stdout.trim() });
+      try {
+        // Parse the JSON output from Python
+        const predictionResult = JSON.parse(stdout.trim());
+        
+        res.json({
+          predicted_class: predictionResult.predicted_class,
+          confidence: predictionResult.confidence,
+          class_confidences: predictionResult.class_confidences
+        });
+      } catch (parseError) {
+        console.error(`Parse error: ${parseError}`);
+        res.status(500).send('Failed to parse prediction output');
+      }
     });
   });
 }
