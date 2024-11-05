@@ -1,9 +1,14 @@
 const db = require("../db/db");
 const multer = require("multer");
 const { exec } = require("child_process");
+const fs = require('fs');
 const path = require('path');
 
 const uploadPath = path.join(__dirname, "..", "model", "uploads");
+// Check if the directory exists, create it if not
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+}
 
 
 // Configure multer to save files in the upload directory with a unique name
