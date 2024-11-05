@@ -1,6 +1,19 @@
 import { api } from './const.js';
 
 document.addEventListener("DOMContentLoaded", function () {
+  document.getElementById('profileImage').addEventListener('change', function (event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = document.getElementById('selectedImage');
+        img.src = e.target.result;
+        img.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
   document.getElementById('resetPasswordButton').addEventListener('click', function () {
     localStorage.clear();
     window.location.href = 'index.html';
@@ -10,7 +23,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const userData = localStorage.getItem("userToken");
   //check if token is still valid
   if (!userData) {
-    window.location.href = "index.html";
     alert("No user data found. Please log in.");
   }
 
@@ -76,6 +88,50 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+document.getElementById("uploadImageButton").addEventListener("click", function () {
+  const file = document.getElementById("profileImage").files[0];
+  if (!file) {
+    alert("No file selected.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  fetch(api + '/auth/uploadImage', {
+    method: 'POST',
+    headers: {
+      "authorization": "Bearer " + localStorage.getItem("userToken")
+    },
+    body: formData
+  })
+    .then(response => response.text())
+    .then(data => {
+      alert(data);
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("An error occurred. Please try again.");
+    });
+});
+
+document.getElementById("predictImageButton").addEventListener("click", function () {
+  fetch(api + '/api/predictImage', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + localStorage.getItem("userToken")
+    }
+  })
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById("result").textContent = data;
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("An error occurred. Please try again.");
+    });
+});
+
 // Handle confirm button in modal for sending password reset email
 document.getElementById("confirmSendEmail").addEventListener("click", function () {
   const email = document.getElementById("profileEmail").textContent;
@@ -84,7 +140,7 @@ document.getElementById("confirmSendEmail").addEventListener("click", function (
     return;
   }
 
-  fetch(api + '/auth/resetPassword/' + email, {
+  fetch(api + '/api/resetPassword/' + email, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json'
