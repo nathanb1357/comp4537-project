@@ -24,7 +24,10 @@ async function startServer() {
         app.post('/auth/resetPassword', changePassword);
         app.get('/auth/userinfo', authenticateToken, getUserInfo);
         app.get('/auth/users', authenticateToken, getAllUsers);
-        // app.post('/api/predictImage', authenticateToken, uploadImage, predictImage);
+
+        // api
+        // app.post('/api/uploadImage', uploadImage);
+        // app.post('/api/predictImage', predictImage);
         // app.post('/api/getApiUsage', getApiUsage);
 
         app.get('/', (req, res) => {
