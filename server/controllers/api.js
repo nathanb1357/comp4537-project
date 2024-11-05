@@ -1,6 +1,7 @@
 const db = require("../db/db");
 const multer = require("multer");
 const { exec } = require("child_process");
+const path = require('path');
 
 const uploadPath = path.join(__dirname, "..", "model", "uploads");
 
