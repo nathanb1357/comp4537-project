@@ -65,7 +65,7 @@ const predictImage = (req, res) => {
     const imagePath = results[0].user_image;
 
     // Step 2: Run the prediction command with the retrieved image path
-    exec(`python server/model/model.py ${imagePath}`, (error, stdout, stderr) => {
+    exec(`python3 server/model/model.py ${imagePath}`, (error, stdout, stderr) => {
       if (error) {
         console.error(`Prediction error: ${error}`);
         return res.status(500).send(`Server error ${error}`);
