@@ -27,7 +27,7 @@ const upload = multer({ storage: storage });
 // Uploads file to folder and stores a reference to it's path in the User table
 const uploadImage = (req, res) => {
   if (!req.file) return res.status(400).send("No file uploaded");
-  const newImagePath = `${uploadPath}${req.file.filename}`;
+  const newImagePath = path.join(uploadPath, req.file.filename);
   const { userId } = req.user;
 
   const selectQuery = "SELECT user_image FROM User WHERE user_id = ?";
