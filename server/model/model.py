@@ -30,7 +30,7 @@ def predict(image_path):
     return predicted_class, confidence, class_confidences
 
 
-TEST_DIR = os.path.join("server", "model", "test.jpg")
-predicted_class, confidence, class_confidences = predict(TEST_DIR)
-print(f"Predicted class: {predicted_class} with confidence: {confidence}")
-print("Confidence for each class:", class_confidences)
+# TEST_DIR = os.path.join("server", "model", "test.jpg")
+# predicted_class, confidence, class_confidences = predict(TEST_DIR)
+# print(f"Predicted class: {predicted_class} with confidence: {confidence}")
+# print("Confidence for each class:", class_confidences)
