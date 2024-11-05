@@ -3,7 +3,7 @@ require('dotenv').config({ path: './server/.env' });
 const express = require('express');
 const db = require('./db/db');
 const cors = require('cors');
-const { uploadImage, predictImage } = require('./controllers/api');
+const { upload, uploadImage, predictImage } = require('./controllers/api');
 const { register, login, resetPassword,  authenticateToken, getUserInfo, changePassword, getAllUsers} = require('./controllers/auth');
 
 async function startServer() {
@@ -24,7 +24,10 @@ async function startServer() {
         app.post('/auth/resetPassword', changePassword);
         app.get('/auth/userinfo', authenticateToken, getUserInfo);
         app.get('/auth/users', authenticateToken, getAllUsers);
-        // app.post('/api/predictImage', authenticateToken, uploadImage, predictImage);
+
+        // api
+        app.post('/api/uploadImage', authenticateToken, upload.single('image'), uploadImage);
+        app.post('/api/predictImage', authenticateToken, predictImage);
         // app.post('/api/getApiUsage', getApiUsage);
 
         app.get('/', (req, res) => {
