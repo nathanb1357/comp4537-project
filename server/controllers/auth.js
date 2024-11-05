@@ -108,33 +108,9 @@ async function resetPassword(req, res) {
 }
   
 
-// /**
-//  * Verifies a password reset token from the URL.
-//  * Checks the token's validity and expiry date in the database.
-//  */
-// async function verifyToken(req, res) {
-//     const { token } = req.params;
-//     const tokenQuery = 'SELECT * FROM ResetToken WHERE token = ?;';
-    
-//     db.query(tokenQuery, [token], (err, results) => {
-//         if (err) return res.status(500).send(`Database error: ${err}`); // Handle database error
-//         if (!results.length) return res.status(404).send('Token not found'); // Token not found in the database
-
-//         const tokenObj = results[0]; // Get the token record
-//         if (new Date(tokenObj.expiry) < new Date()) {
-//             return res.status(403).send('Token expired'); // Token has expired
-//         }
-
-//         // Redirect to a specific page, passing the user's email as a query parameter
-//         const userEmail = tokenObj.user_id; 
-//         res.redirect(`/your-specific-page?email=${encodeURIComponent(userEmail)}`);
-//     });
-// }
-
 
 /**
- * changes the password
- * 
+ * Changes the password
  */
 async function changePassword(req, res) {
     const { token, email, password } = req.body;
