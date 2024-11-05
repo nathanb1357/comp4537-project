@@ -1,4 +1,4 @@
-import { api } from './config.js';
+import { api } from './const.js';
 
 
 document.getElementById("submit").addEventListener("click", function () {
