@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("profileEmail").textContent = data.user_email || "N/A";
       document.getElementById("apiUsage").textContent = data.user_calls || "N/A";
       if (data.user_role == "admin") {
-        fetch(api + '/auth/getAllUsers', {
+        fetch(api + '/auth/users', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -46,6 +46,14 @@ document.addEventListener("DOMContentLoaded", function () {
           .then(response => response.json())
           .then(data => {
             let table = document.getElementById("userTable");
+            let header = table.createTHead();
+            let headerRow = header.insertRow(0);
+            let headerCell1 = headerRow.insertCell(0);
+            let headerCell2 = headerRow.insertCell(1);
+            let headerCell3 = headerRow.insertCell(2);
+            headerCell1.textContent = "User ID";
+            headerCell2.textContent = "User Email";
+            headerCell3.textContent = "User Calls";
             data.forEach(user => {
               let row = table.insertRow(-1);
               let cell1 = row.insertCell(0);
