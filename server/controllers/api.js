@@ -6,21 +6,14 @@ const path = require('path');
 
 const uploadPath = path.join(__dirname, "..", "model", "uploads");
 
-
 // Check if the directory exists, create it if not
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
-}
+if (!fs.existsSync(uploadPath)) { fs.mkdirSync(uploadPath, { recursive: true }) }
 
 
 // Configure multer to save files in the upload directory with a unique name
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
+  destination: (req, file, cb) => {cb(null, uploadPath)},
+  filename: (req, file, cb) => {cb(null, `${Date.now()}-${file.originalname}`)}
 });
 
 const upload = multer({ storage: storage });

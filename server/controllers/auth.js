@@ -1,23 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { passwordEmail } = require('./passwordEmail');
+const { passwordEmail } = require('./middleware');
 const db = require('../db/db');
 
-
-/**
- * Middleware to authenticate JWT token in request header.
- * Checks if token exists, is valid or expired, allowing access to next route.
- */
-function authenticateToken(req, res, next) {
-  const token = req.headers['authorization']?.split(' ')[1];
-  if (!token) return res.status(401).send('Access denied.');
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-      if (err) return res.status(403).send('Invalid token.');
-      req.user = user; 
-      next();
-  });
-}
 
 /**
  * Register a new user in the database.
@@ -148,4 +133,4 @@ async function changePassword(req, res) {
 }
 
   
-module.exports = { register, login, authenticateToken, resetPassword, changePassword };
+module.exports = { register, login, resetPassword, changePassword };
