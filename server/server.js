@@ -5,7 +5,7 @@ const db = require('./db/db');
 const cors = require('cors');
 const { upload, uploadImage, predictImage, getUserInfo, getAllUsers, getApiStats, deleteUser, editUser } = require('./controllers/api');
 const { register, login, resetPassword, changePassword } = require('./controllers/auth');
-const { authenticateToken } = require('./controllers/middleware')
+const { authenticateToken, incrementEndpointCalls } = require('./controllers/middleware')
 
 async function startServer() {
     try {
@@ -20,18 +20,18 @@ async function startServer() {
         }));
 
         // auth endpoints
-        app.post('/v1/auth/register', register);
-        app.post('/v1/auth/login', login);
-        app.get('/v1/auth/resetPassword/:email', resetPassword);
-        app.post('/v1/auth/resetPassword', changePassword);
+        app.post('/v1/auth/register', register, incrementEndpointCalls);
+        app.post('/v1/auth/login', login, incrementEndpointCalls);
+        app.get('/v1/auth/resetPassword/:email', resetPassword, incrementEndpointCalls);
+        app.post('/v1/auth/resetPassword', changePassword, incrementEndpointCalls);
 
         // api endpoints
-        app.get('/v1/api/getUsers', authenticateToken, getAllUsers);
-        app.get('/v1/api/getUserInfo', authenticateToken, getUserInfo);
-        app.post('/v1/api/predictImage', authenticateToken, upload.single('image'), uploadImage, predictImage);
-        app.get('/v1/api/getApiStats', authenticateToken, getApiStats);
-        app.delete('/v1/api/deleteUser', authenticateToken, deleteUser);
-        app.patch('/v1/api/editUser', authenticateToken, editUser);
+        app.get('/v1/api/getUsers', authenticateToken, getAllUsers, incrementEndpointCalls);
+        app.get('/v1/api/getUserInfo', authenticateToken, getUserInfo, incrementEndpointCalls);
+        app.post('/v1/api/predictImage', authenticateToken, upload.single('image'), uploadImage, predictImage, incrementEndpointCalls);
+        app.get('/v1/api/getApiStats', authenticateToken, getApiStats, incrementEndpointCalls);
+        app.delete('/v1/api/deleteUser', authenticateToken, deleteUser, incrementEndpointCalls);
+        app.patch('/v1/api/editUser', authenticateToken, editUser, incrementEndpointCalls);
 
 
         // TODO: Edit to send documentation on our API

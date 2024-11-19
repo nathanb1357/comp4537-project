@@ -41,9 +41,9 @@ class Database {
         const createEndpointTableQuery = `
         CREATE TABLE IF NOT EXISTS Endpoint (
             endpoint_id INT AUTO_INCREMENT PRIMARY KEY,
-            endpoint_name VARCHAR(255) UNIQUE NOT NULL,
+            endpoint_path VARCHAR(255) UNIQUE NOT NULL,
             endpoint_method VARCHAR(255) NOT NULL,
-            endpoint_requests INT DEFAULT 0
+            endpoint_calls INT DEFAULT 1
         ) ENGINE=InnoDB;`;
 
         // Create User table

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const sgMail = require('@sendgrid/mail')
+const db = require('../db/db');
 
 
 /**
@@ -41,4 +42,34 @@ async function passwordEmail(email, token) {
 }
 
 
-module.exports = { authenticateToken, passwordEmail }
+/**
+ * Increment call value in the Endpoint table based on successful request completion
+ */
+function incrementEndpointCalls(req, res, next) {
+    const endpoint = req.originalUrl.split('?')[0]; // Extract the endpoint path without query parameters
+    const method = req.method;
+    console.log(`Endpoint called ${method}: ${endpoint}`);
+    const updateQuery = 'UPDATE Endpoint SET endpoint_calls = endpoint_calls + 1 WHERE endpoint_path = ?';
+
+    db.query(updateQuery, [endpoint], (err, results) => {
+        if (err) {
+            console.error(`Error updating call count for endpoint ${endpoint}:`, err);
+            return; // Log the error but don't affect the response
+        }
+
+        // If the endpoint path doesn't exist in the table, you might want to insert it
+        if (results.affectedRows === 0) {
+            const insertQuery = 'INSERT INTO Endpoint (endpoint_path, endpoint_method) VALUES (?, ?)';
+            db.query(insertQuery, [endpoint, method], (insertErr) => {
+                if (insertErr) {
+                    console.error(`Error inserting new endpoint ${endpoint}:`, insertErr);
+                }
+            });
+        }
+    })
+
+    next();
+}
+
+
+module.exports = { authenticateToken, passwordEmail, incrementEndpointCalls }
