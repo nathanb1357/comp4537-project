@@ -38,16 +38,26 @@ document.addEventListener("DOMContentLoaded", function () {
     })
       .then(response => response.json())
       .then(data => {
-        if (data.success) {
-          alert("Login successful!");
-          localStorage.setItem("userToken", JSON.stringify(data.token)); // Store the token
-          if (data.userType == "admin") {
-            window.location.href = "signedinAdmin.html"; // Redirect to admin page
-          } else {
-            window.location.href = "signedinUser.html"; // Redirect to profile page
-          }
+        if (data.token) {
+          localStorage.setItem("userToken", data.token); // Store the token
+
+          fetch(api + '/auth/userInfo/', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + data.token
+            }
+          }).then(response => response.json())
+            .then(data => {
+              if (data.user_role == "admin") {
+                window.location.href = "signedinAdmin.html"; // Redirect to admin page
+              } else {
+                window.location.href = "signedinUser.html"; // Redirect to profile page
+              }
+            }
+            )
         } else {
-          alert("Login failed: " + data.message);
+          alert("Login failed: " + data.error);
         }
       })
       .catch(error => {
@@ -68,9 +78,12 @@ document.addEventListener("DOMContentLoaded", function () {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({email: email, password: password })
+      body: JSON.stringify({ email: email, password: password })
     })
-      .then(response => {alert(response.text());})
+      .then(response => response.text())
+      .then(data => {
+        alert(data);
+      })
       .catch(error => {
         console.error("Error:", error);
         alert("An error occurred. Please try again.");

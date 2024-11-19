@@ -1,23 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { passwordEmail } = require('./passwordEmail');
+const { passwordEmail } = require('./middleware');
 const db = require('../db/db');
 
-
-/**
- * Middleware to authenticate JWT token in request header.
- * Checks if token exists, is valid or expired, allowing access to next route.
- */
-function authenticateToken(req, res, next) {
-  const token = req.headers['authorization']?.split(' ')[1];
-  if (!token) return res.status(401).send('Access denied.');
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-      if (err) return res.status(403).send('Invalid token.');
-      req.user = user; 
-      next();
-  });
-}
 
 /**
  * Register a new user in the database.
@@ -32,11 +17,11 @@ async function register(req, res) {
 
     // Check if user with same email exists
     db.query(userExistsQuery, [email], (err, results) => {
-        if (err) return res.status(500).send('Database error'); // Handle database error
+        if (err) return res.status(500).send(`Database error: ${err}`); // Handle database error
         if (results.length) return res.status(409).send('User already exists'); // Email already registered
 
         db.query(insertUserQuery, [email, hashedPassword], (err) => {
-            if (err) return res.status(500).send('Database error'); // Handle database error during insertion
+            if (err) return res.status(500).send(`Database error: ${err}`); // Handle database error during insertion
             res.status(201).send('User registered successfully'); // Success response  
         });
     });
@@ -51,15 +36,21 @@ async function login(req, res) {
     const userQuery = 'SELECT * FROM User WHERE user_email = ?;';
 
     db.query(userQuery, [email], async (err, results) => {
-        if (err) return res.status(500).send('Database error'); // Handle database error
-        if (!results.length) return res.status(404).send('User not found'); // No user found with the provided email
-    
+        if (err) {
+            return res.status(500).json({ error: `Database error: ${err}` }); 
+        }
+        if (!results.length) {
+            return res.status(404).json({ error: 'User not found' }); 
+        }
+
         const user = results[0];
         const validPassword = await bcrypt.compare(password, user.user_pass);
-        if (!validPassword) return res.status(401).send('Invalid credentials'); // Password does not match
-    
+        if (!validPassword) {
+            return res.status(401).json({ error: 'Invalid credentials: passwords do not match' }); 
+        }
+
         // Generate a JWT token with user email and ID, valid for 1 hour
-        const token = jwt.sign({ userId: user.user_id, email: user.user_email }, jwtSecret, { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user.user_id, email: user.user_email }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.json({ token });
     });
 }
@@ -74,45 +65,72 @@ async function resetPassword(req, res) {
     const userQuery = 'SELECT * FROM User WHERE user_email = ?;';
     const tokenQuery = 'INSERT INTO ResetToken (token, user_id, expiry) VALUES (?, ?, ?);';
 
-    db.query(userQuery, [email], (err, results) => {
-        if (err) return res.status(500).send('Database error'); // Handle database error
-        if (!results.length) return res.status(404).send('User not found'); // No user found with the provided email
-    
-        const token = jwt.sign({ email }, jwtSecret, { expiresIn: '1d' });
-        const expirationDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 1 day
-
-        db.query(tokenQuery, [token, results[0].user_id, expirationDate], (err) => {
-            if (err) return res.status(500).send('Database error'); // Handle database error
-            passwordEmail(email, token);
-
-            res.status(200).send('Password reset successfully');
+    try {
+        const userResults = await new Promise((resolve, reject) => {
+            db.query(userQuery, [email], (err, results) => {
+                if (err) return reject(err);
+                resolve(results);
+            });
         });
-    }); 
+
+        if (!userResults.length) return res.status(200).send('If an account with that email exists, a reset email will be sent.'); // Generic message
+
+        const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        const expirationDate = Math.floor(Date.now() / 1000) + 24 * 60 * 60; // 1 day
+
+        await new Promise((resolve, reject) => {
+            db.query(tokenQuery, [token, userResults[0].user_id, expirationDate], (err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
+
+        await passwordEmail(email, token);
+        res.status(200).send('Password reset email sent successfully');
+    } catch (err) {
+        return res.status(500).send(`Database error: ${err}`);
+    }
 }
   
+
 
 /**
- * Verifies a password reset token from the URL.
- * Checks the token's validity and expiry date in the database.
+ * Changes the password
  */
-async function verifyToken(req, res) {
-    const { token } = req.params;
-    const tokenQuery = 'SELECT * FROM ResetToken WHERE token = ?;';
-    
-    db.query(tokenQuery, [token], (err, results) => {
-        if (err) return res.status(500).send('Database error'); // Handle database error
-        if (!results.length) return res.status(404).send('Token not found'); // Token not found in the database
+async function changePassword(req, res) {
+    const { token, email, password } = req.body;
 
-        const tokenObj = results[0]; // Get the token record
-        if (new Date(tokenObj.expiry) < new Date()) {
-            return res.status(403).send('Token expired'); // Token has expired
+    try {
+        
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        
+        if (decoded.email !== email) {
+            return res.status(403).send('Invalid token for the provided email');
         }
 
-        // Redirect to a specific page, passing the user's email as a query parameter
-        const userEmail = tokenObj.user_id; 
-        res.redirect(`/your-specific-page?email=${encodeURIComponent(userEmail)}`);
-    });
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const userExistsQuery = 'SELECT * FROM User WHERE user_email = ?;';
+        const updatePasswordQuery = 'UPDATE User SET user_pass = ? WHERE user_email = ?;';
+
+        
+        db.query(userExistsQuery, [email], (err, results) => {
+            if (err) return res.status(500).send(`Database error: ${err}`);
+            if (!results.length) return res.status(404).send('User not found');
+
+            
+            db.query(updatePasswordQuery, [hashedPassword, email], (err) => {
+                if (err) return res.status(500).send(`Database error: ${err}`);
+                res.status(200).send('Password changed successfully');
+            });
+        });
+    } catch (err) {
+        if (err instanceof jwt.JsonWebTokenError) {
+            return res.status(401).send('Invalid or expired token');
+        }
+        return res.status(500).send(`Error verifying token: ${err.message}`);
+    }
 }
 
   
-module.exports = { register, login, authenticateToken, resetPassword, verifyToken };
+module.exports = { register, login, resetPassword, changePassword };

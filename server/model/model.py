@@ -1,6 +1,7 @@
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 from PIL import Image
 import torch
+import json
 import os
 
 MODEL_DIR = os.path.join("server", "model", "sdxl-detector")
@@ -21,16 +22,23 @@ def predict(image_path):
     logits = outputs.logits
     probabilities = torch.nn.functional.softmax(logits, dim=-1).squeeze()
 
-    # Get the predicted class and its confidence
+    # Get the predicted class and confidence
     predicted_class = torch.argmax(probabilities).item()
     confidence = probabilities[predicted_class].item()
+    predicted_class = "AI-Generated Image" if predicted_class == 0 else "Real Image"
 
     # Convert probabilities to a dictionary for each class
     class_confidences = {i: prob.item() for i, prob in enumerate(probabilities)}
-    return predicted_class, confidence, class_confidences
+
+    output = {
+        "predicted_class": predicted_class,
+        "confidence": confidence,
+        "class_confidences": class_confidences
+    }
+
+    print(json.dumps(output))
 
 
-TEST_DIR = os.path.join("server", "model", "test.jpg")
-predicted_class, confidence, class_confidences = predict(TEST_DIR)
-print(f"Predicted class: {predicted_class} with confidence: {confidence}")
-print("Confidence for each class:", class_confidences)
+if __name__ == "__main__":
+    import sys
+    predict(sys.argv[1])
