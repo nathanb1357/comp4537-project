@@ -19,22 +19,22 @@ async function startServer() {
         }));
 
         // auth endpoints
-        app.post('/auth/register', register);
-        app.post('/auth/login', login);
-        app.get('/auth/resetPassword/:email', resetPassword);
-        app.post('/auth/resetPassword', changePassword);
+        app.post('/v1/auth/register', register);
+        app.post('/v1/auth/login', login);
+        app.get('/v1/auth/resetPassword/:email', resetPassword);
+        app.post('/v1/auth/resetPassword', changePassword);
 
         // api endpoints
-        app.get('/api/getUsers', authenticateToken, getAllUsers);
-        app.get('/api/getUserInfo', authenticateToken, getUserInfo);
-        app.post('/api/predictImage', authenticateToken, upload.single('image'), uploadImage, predictImage);
-        app.get('/api/getApiStats', authenticateToken, getApiStats);
-        app.delete('/api/deleteUser', authenticateToken, deleteUser);
-        app.patch('/api/editUser', authenticateToken, editUser);
+        app.get('/v1/api/getUsers', authenticateToken, getAllUsers);
+        app.get('/v1/api/getUserInfo', authenticateToken, getUserInfo);
+        app.post('/v1/api/predictImage', authenticateToken, upload.single('image'), uploadImage, predictImage);
+        app.get('/v1/api/getApiStats', authenticateToken, getApiStats);
+        app.delete('/v1/api/deleteUser', authenticateToken, deleteUser);
+        app.patch('/v1/api/editUser', authenticateToken, editUser);
 
 
         // TODO: Edit to send documentation on our API
-        app.get('/', (req, res) => {
+        app.get('/v1/', (req, res) => {
             res.send('Welcome to the API server');
         });
 
