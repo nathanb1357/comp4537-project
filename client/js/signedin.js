@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const userData = localStorage.getItem("userToken");
   //check if token is still valid
   if (!userData) {
-    alert("No user data found. Please log in.");
+    window.location.href = "register.html";
   }
 
   if (userData.expiry < Date.now()) {
