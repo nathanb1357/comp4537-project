@@ -3,8 +3,8 @@ require('dotenv').config({ path: './server/.env' });
 const express = require('express');
 const db = require('./db/db');
 const cors = require('cors');
-const { upload, uploadImage, predictImage, getUserInfo, getAllUsers, getApiStats, deleteUser, editUser } = require('./controllers/api');
-const { register, login, resetPassword, changePassword } = require('./controllers/auth');
+const { upload, uploadImage, predictImage, getUserInfo, getAllUsers, getApiStats, deleteUser, editUser, changeRole } = require('./controllers/api');
+const { register, login, resetPassword, changePassword, verifyUser } = require('./controllers/auth');
 const { authenticateToken, incrementEndpointCalls } = require('./controllers/middleware')
 
 async function startServer() {
@@ -24,6 +24,8 @@ async function startServer() {
         app.post('/v1/auth/login', login, incrementEndpointCalls);
         app.get('/v1/auth/resetPassword/:email', resetPassword, incrementEndpointCalls);
         app.post('/v1/auth/resetPassword', changePassword, incrementEndpointCalls);
+        app.get('/v1/auth/verify', authenticateToken, verifyUser, incrementEndpointCalls);
+
 
         // api endpoints
         app.get('/v1/api/getUsers', authenticateToken, getAllUsers, incrementEndpointCalls);
@@ -32,6 +34,7 @@ async function startServer() {
         app.get('/v1/api/getApiStats', authenticateToken, getApiStats, incrementEndpointCalls);
         app.delete('/v1/api/deleteUser', authenticateToken, deleteUser, incrementEndpointCalls);
         app.patch('/v1/api/editUser', authenticateToken, editUser, incrementEndpointCalls);
+        app.patch('/v1/api/changerole', authenticateToken, changeRole, incrementEndpointCalls);
 
 
         // TODO: Edit to send documentation on our API

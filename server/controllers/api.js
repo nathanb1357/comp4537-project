@@ -145,21 +145,71 @@ const predictImage = (req, res) => {
   });
 }
 
+/**
+ * Returns statistics about all API usage from Endpoint table.
+ * 
+ */
 
 
 const getApiStats = (req, res) => {
-
+  const query = 'SELECT * FROM Endpoint;';
+  db.query(query, (err, results) => {
+    if (err) return res.status(500).send(`Database error: ${err}`);
+    res.json(results);
+  });
 }
 
-
+/**
+ * Delete a user from the database.
+ * Requires admin privilages to access.
+ */
 const deleteUser = (req, res) => {
-  
+  if (!req.user || req.user.user_role !== 'admin') {
+    return res.status(403).send('Access denied');
+  }
+  const query = 'DELETE FROM User WHERE user_email = ?;';
+  // Extract the email from the request body
+  const { email } = req.body;
+  db.query(query, [email], (err) => {
+    if (err) return res.status(500).send(`Database error: ${err}`);
+    res.status(200).send('User deleted successfully');
+  });
 }
 
+/**
+ * change password of a user
+ */
 
-const editUser = (req, res) => {
+const editUser = async (req, res) => {
+  try{ 
+    const { userId } = req.user;
+    const { password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const query = 'UPDATE User SET user_pass = ? WHERE user_id = ?;';
+    db.query(query, [hashedPassword, userId], (err) => {
+      if (err) return res.status(500).send(`Database error: ${err}`);
+      res.status(200).send('Password updated successfully');
+    });
+  } catch (err) {
+    return res.status(500).send(`internal server error: ${err}`);
+  }
 
 }
 
+/**
+ * Allow admin to change roles of other users
+ */
+const changeRole = async (req, res) => {
+  //check if user is admin
+  if (req.user.user_role !== 'admin') {
+    return res.status(403).send('Access denied');
+  }
+  const { email, role } = req.body;
+  const query = 'UPDATE User SET user_role = ? WHERE user_email = ?;';
+  db.query(query, [role, email], (err) => {
+    if (err) return res.status(500).send(`Database error: ${err}`);
+    res.status(200).send('Role updated successfully');
+  });
 
-module.exports = { upload, uploadImage, predictImage, getUserInfo, getAllUsers, getApiStats, deleteUser, editUser };
+
+module.exports = { upload, uploadImage, predictImage, getUserInfo, getAllUsers, getApiStats, deleteUser, editUser, changeRole };
