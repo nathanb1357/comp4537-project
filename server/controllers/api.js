@@ -5,26 +5,79 @@ const fs = require('fs');
 const path = require('path');
 
 const uploadPath = path.join(__dirname, "..", "model", "uploads");
+
 // Check if the directory exists, create it if not
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
-}
+if (!fs.existsSync(uploadPath)) { fs.mkdirSync(uploadPath, { recursive: true }) }
 
 
 // Configure multer to save files in the upload directory with a unique name
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
+  destination: (req, file, cb) => {cb(null, uploadPath)},
+  filename: (req, file, cb) => {cb(null, `${Date.now()}-${file.originalname}`)}
 });
 
 const upload = multer({ storage: storage });
 
 
-// Uploads file to folder and stores a reference to it's path in the User table
+// ---------------------------------------------------------------- ENDPOINTS -----------------------------------------------------------------------------
+
+
+/**
+ * Return user information based on the token.
+ * Excludes the password from the response.
+ */
+async function getUserInfo(req, res) {
+  const { userId } = req.user; 
+  const userQuery = 'SELECT user_id, user_email, user_calls, user_role FROM User WHERE user_id = ?;';
+
+  db.query(userQuery, [userId], (err, results) => {
+      if (err) return res.status(500).send(`Database error: ${err}`); 
+      if (!results.length) return res.status(404).send('User not found'); 
+
+      const user = results[0];
+      delete user.user_pass; // Remove password from the response
+      res.json(user);
+  });
+}
+
+/**
+ * Get information about all users in the system.
+ * Requires admin privilages to access.
+ */
+async function getAllUsers(req, res) {
+  // Extract the token from the Authorization header
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) return res.status(401).json({ message: 'Access token required' });
+
+  try { 
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);     
+      const userRoleQuery = 'SELECT user_role FROM User WHERE user_id = ?;';
+
+      db.query(userRoleQuery, [decoded.userId], (err, results) => {
+          if (err) return res.status(500).json({ message: `Database error: ${err}` });
+          if (!results.length || results[0].user_role !== 'admin') {
+              return res.status(403).json({ message: 'Access denied' });
+          }
+
+          const allUsersQuery = 'SELECT user_id, user_email, user_calls, user_role FROM User;';
+          db.query(allUsersQuery, (err, users) => {
+              if (err) return res.status(500).json({ message: `Database error: ${err}` });
+              res.status(200).json(users);
+          });
+      });
+  } catch (error) {
+      res.status(403).json({ message: 'Invalid or expired token' });
+  }
+}
+
+
+/**
+ * Upload an image file to a specified folder and update the user's image path in the database.
+ * If a previous image exists, it will be deleted from the server.
+ * Returns a success message upon successful upload and database update.
+ */
 const uploadImage = (req, res) => {
   if (!req.file) return res.status(400).send("No file uploaded");
   const newImagePath = path.join(uploadPath, req.file.filename);
@@ -53,7 +106,11 @@ const uploadImage = (req, res) => {
 };
 
 
-
+/**
+ * Predict the contents of the user's uploaded image using an external Python model.
+ * Retrieves the stored image path, then runs a prediction command with the Python script.
+ * Returns prediction results in JSON format, including predicted class and confidences.
+ */
 const predictImage = (req, res) => {
   const { userId } = req.user;
 
@@ -88,5 +145,71 @@ const predictImage = (req, res) => {
   });
 }
 
+/**
+ * Returns statistics about all API usage from Endpoint table.
+ * 
+ */
 
-module.exports = { upload, uploadImage, predictImage };
+
+const getApiStats = (req, res) => {
+  const query = 'SELECT * FROM Endpoint;';
+  db.query(query, (err, results) => {
+    if (err) return res.status(500).send(`Database error: ${err}`);
+    res.json(results);
+  });
+}
+
+/**
+ * Delete a user from the database.
+ * Requires admin privilages to access.
+ */
+const deleteUser = (req, res) => {
+  if (!req.user || req.user.user_role !== 'admin') {
+    return res.status(403).send('Access denied');
+  }
+  const query = 'DELETE FROM User WHERE user_email = ?;';
+  // Extract the email from the request body
+  const { email } = req.body;
+  db.query(query, [email], (err) => {
+    if (err) return res.status(500).send(`Database error: ${err}`);
+    res.status(200).send('User deleted successfully');
+  });
+}
+
+/**
+ * change password of a user
+ */
+
+const editUser = async (req, res) => {
+  try{ 
+    const { userId } = req.user;
+    const { password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const query = 'UPDATE User SET user_pass = ? WHERE user_id = ?;';
+    db.query(query, [hashedPassword, userId], (err) => {
+      if (err) return res.status(500).send(`Database error: ${err}`);
+      res.status(200).send('Password updated successfully');
+    });
+  } catch (err) {
+    return res.status(500).send(`internal server error: ${err}`);
+  }
+
+}
+
+/**
+ * Allow admin to change roles of other users
+ */
+const changeRole = async (req, res) => {
+  //check if user is admin
+  if (req.user.user_role !== 'admin') {
+    return res.status(403).send('Access denied');
+  }
+  const { email, role } = req.body;
+  const query = 'UPDATE User SET user_role = ? WHERE user_email = ?;';
+  db.query(query, [role, email], (err) => {
+    if (err) return res.status(500).send(`Database error: ${err}`);
+    res.status(200).send('Role updated successfully');
+  });
+
+
+module.exports = { upload, uploadImage, predictImage, getUserInfo, getAllUsers, getApiStats, deleteUser, editUser, changeRole };

@@ -38,6 +38,14 @@ class Database {
             FOREIGN KEY (user_id) REFERENCES User(user_id)
         ) ENGINE=InnoDB;`;
 
+        const createEndpointTableQuery = `
+        CREATE TABLE IF NOT EXISTS Endpoint (
+            endpoint_id INT AUTO_INCREMENT PRIMARY KEY,
+            endpoint_path VARCHAR(255) UNIQUE NOT NULL,
+            endpoint_method VARCHAR(255) NOT NULL,
+            endpoint_calls INT DEFAULT 1
+        ) ENGINE=InnoDB;`;
+
         // Create User table
         this.query(createUserTableQuery, (err, result) => {
             if (err) {
@@ -54,6 +62,15 @@ class Database {
                 }
                 console.log('ResetToken table ready');
             });
+        });
+
+        // Now create Endpoint table
+        this.query(createEndpointTableQuery, (err, result) => {
+            if (err) {
+                console.error("Error initializing Endpoint table:", err);
+                return;
+            }
+            console.log('Endpoint table ready');
         });
     }
 
