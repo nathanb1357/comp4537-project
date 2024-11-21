@@ -32,8 +32,8 @@ async function getUserInfo(req, res) {
   const userQuery = 'SELECT user_id, user_email, user_calls, user_role FROM User WHERE user_id = ?;';
 
   db.query(userQuery, [userId], (err, results) => {
-      if (err) return res.status(500).send(`Database error: ${err}`); 
-      if (!results.length) return res.status(404).send('User not found'); 
+      if (err) return res.status(500).json({error: `Database error: ${err}`}); 
+      if (!results.length) return res.status(404).json({error: 'User not found'}); 
 
       const user = results[0];
       delete user.user_pass; // Remove password from the response
@@ -50,26 +50,26 @@ async function getAllUsers(req, res) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   
-  if (!token) return res.status(401).json({ message: 'Access token required' });
+  if (!token) return res.status(401).json({ error: 'Access token required' });
 
   try { 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);     
       const userRoleQuery = 'SELECT user_role FROM User WHERE user_id = ?;';
 
       db.query(userRoleQuery, [decoded.userId], (err, results) => {
-          if (err) return res.status(500).json({ message: `Database error: ${err}` });
+          if (err) return res.status(500).json({ error: `Database error: ${err}` });
           if (!results.length || results[0].user_role !== 'admin') {
-              return res.status(403).json({ message: 'Access denied' });
+            return res.status(403).json({ error: 'Access denied' });
           }
 
           const allUsersQuery = 'SELECT user_id, user_email, user_calls, user_role FROM User;';
           db.query(allUsersQuery, (err, users) => {
-              if (err) return res.status(500).json({ message: `Database error: ${err}` });
+              if (err) return res.status(500).json({ error: `Database error: ${err}` });
               res.status(200).json(users);
           });
       });
   } catch (error) {
-      res.status(403).json({ message: 'Invalid or expired token' });
+      res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
 
@@ -80,13 +80,13 @@ async function getAllUsers(req, res) {
  * Returns a success message upon successful upload and database update.
  */
 const uploadImage = (req, res) => {
-  if (!req.file) return res.status(400).send("No file uploaded");
+  if (!req.file) return res.status(400).json({error: "No file uploaded"});
   const newImagePath = path.join(uploadPath, req.file.filename);
   const { userId } = req.user;
 
   const selectQuery = "SELECT user_image FROM User WHERE user_id = ?";
   db.query(selectQuery, [userId], (err, results) => {
-    if (err) return res.status(500).send(`Database error: ${err}`);
+    if (err) return res.status(500).json({error: `Database error: ${err}`});
     const oldImagePath = results[0]?.user_image;
 
     // Step 2: Delete the previous image file if it exists
@@ -100,8 +100,8 @@ const uploadImage = (req, res) => {
     const updateQuery = "UPDATE User SET user_image = ? WHERE user_id = ?";
     db.query(updateQuery, [newImagePath, userId], (updateErr) => {
       if (updateErr)
-        return res.status(500).send(`Database error: ${updateErr}`);
-      res.status(200).send("Image uploaded successfully");
+        return res.status(500).json({error: `Database error: ${updateErr}`});
+      res.status(200).json({message: "Image uploaded successfully"});
     });
   });
 };
@@ -114,11 +114,11 @@ const uploadImage = (req, res) => {
  */
 const predictImage = (req, res) => {
   const { userId } = req.user;
-
   const query = 'SELECT user_image FROM User WHERE user_id = ?';
+  
   db.query(query, [userId], (err, results) => {
-    if (err) return res.status(500).send(`Database error: ${err}`);
-    if (!results.length || !results[0].user_image) return res.status(404).send('No image found for prediction');
+    if (err) return res.status(500).json({error: `Database error: ${err}`});
+    if (!results.length || !results[0].user_image) return res.status(404).json({error: 'No image found for prediction'});
 
     const imagePath = results[0].user_image;
 
@@ -126,7 +126,7 @@ const predictImage = (req, res) => {
     exec(`python3 server/model/model.py ${imagePath}`, (error, stdout, stderr) => {
       if (error) {
         console.error(`Prediction error: ${error}`);
-        return res.status(500).send(`Server error ${error}`);
+        return res.status(500).json({error: `Server error ${error}`});
       }
 
       try {
@@ -140,7 +140,7 @@ const predictImage = (req, res) => {
         });
       } catch (parseError) {
         console.error(`Parse error: ${parseError}`);
-        res.status(500).send('Failed to parse prediction output');
+        res.status(500).json({error: 'Failed to parse prediction output'});
       }
     });
   });
@@ -153,8 +153,8 @@ const predictImage = (req, res) => {
 const getApiStats = (req, res) => {
   const query = 'SELECT * FROM Endpoint;';
   db.query(query, (err, results) => {
-    if (err) return res.status(500).send(`Database error: ${err}`);
-    res.json(results);
+    if (err) return res.status(500).json({error: `Database error: ${err}`});
+    res.status(200).json(results);
   });
 }
 
