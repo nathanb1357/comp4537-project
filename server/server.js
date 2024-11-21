@@ -6,6 +6,9 @@ const cors = require('cors');
 const { upload, uploadImage, predictImage, getUserInfo, getAllUsers, getApiStats, deleteUser, editPassword, editRole } = require('./controllers/api');
 const { register, login, resetPassword, changePassword, verifyUser } = require('./controllers/auth');
 const { authenticateToken, incrementEndpointCalls } = require('./controllers/middleware')
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocs = require('./swagger');
+
 
 async function startServer() {
     try {
@@ -18,6 +21,10 @@ async function startServer() {
             methods: ['GET', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
             credentials: true
         }));
+        
+        // static pages
+        app.get('/', (req, res) => {res.send('Welcome to the DeepDetective API')});
+        app.use('/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
         // auth endpoints
         app.post('/v1/auth/register', register, incrementEndpointCalls);
@@ -36,11 +43,6 @@ async function startServer() {
         app.patch('/v1/api/editPassword', authenticateToken, editPassword, incrementEndpointCalls);
         app.patch('/v1/api/editRole', authenticateToken, editRole, incrementEndpointCalls);
 
-
-        // TODO: Edit to send documentation on our API
-        app.get('/', (req, res) => {
-            res.send('Welcome to the API server');
-        });
 
         // Error handling middleware
         app.use((err, req, res, next) => {

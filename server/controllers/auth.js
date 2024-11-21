@@ -17,12 +17,12 @@ async function register(req, res) {
 
     // Check if user with same email exists
     db.query(userExistsQuery, [email], (err, results) => {
-        if (err) return res.status(500).send(`Database error: ${err}`); // Handle database error
-        if (results.length) return res.status(409).send('User already exists'); // Email already registered
+        if (err) return res.status(500).json({ error: `Database error: ${err}` }); // Handle database error
+        if (results.length) return res.status(409).json({ error: 'User already exists' }); // Email already registered
 
         db.query(insertUserQuery, [email, hashedPassword], (err) => {
-            if (err) return res.status(500).send(`Database error: ${err}`); // Handle database error during insertion
-            res.status(201).send('User registered successfully'); // Success response  
+            if (err) return res.status(500).json({ error: `Database error: ${err}` }); // Handle database error during insertion
+            res.status(201).json({ message: 'User registered successfully' }); // Success response  
         });
     });
 }
@@ -56,7 +56,7 @@ async function login(req, res) {
                 secure: true, 
                 maxAge: 3600000,
             });
-        res.status(200).send('Login successful');
+        res.status(200).json({message: 'Login successful'});
 
     });
 }
@@ -79,7 +79,7 @@ async function resetPassword(req, res) {
             });
         });
 
-        if (!userResults.length) return res.status(200).send('If an account with that email exists, a reset email will be sent.'); // Generic message
+        if (!userResults.length) return res.status(200).json({message: 'If an account with that email exists, a reset email will be sent.'}); // Generic message
 
         const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
         const expirationDate = Math.floor(Date.now() / 1000) + 24 * 60 * 60; // 1 day
@@ -92,9 +92,9 @@ async function resetPassword(req, res) {
         });
 
         await passwordEmail(email, token);
-        res.status(200).send('Password reset email sent successfully');
+        res.status(200).json({message: 'Password reset email sent successfully'});
     } catch (err) {
-        return res.status(500).send(`Database error: ${err}`);
+        return res.status(500).json({error: `Database error: ${err}`});
     }
 }
   
@@ -113,7 +113,7 @@ async function changePassword(req, res) {
         const updatePasswordQuery = 'UPDATE User SET user_pass = ? WHERE user_email = ?;';
 
         if (decoded.email !== email) {
-            return res.status(403).send('Invalid token for the provided email');
+            return res.status(403).json({error: 'Invalid token for the provided email'});
         }
 
         
