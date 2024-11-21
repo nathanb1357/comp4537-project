@@ -3,6 +3,7 @@ const multer = require("multer");
 const { exec } = require("child_process");
 const fs = require('fs');
 const path = require('path');
+const { editPassword } = require("./auth");
 
 const uploadPath = path.join(__dirname, "..", "model", "uploads");
 
@@ -149,8 +150,6 @@ const predictImage = (req, res) => {
  * Returns statistics about all API usage from Endpoint table.
  * 
  */
-
-
 const getApiStats = (req, res) => {
   const query = 'SELECT * FROM Endpoint;';
   db.query(query, (err, results) => {
@@ -180,7 +179,7 @@ const deleteUser = (req, res) => {
  * change password of a user
  */
 
-const editUser = async (req, res) => {
+const editPassword = async (req, res) => {
   try{ 
     const { userId } = req.user;
     const { password } = req.body;
@@ -199,7 +198,7 @@ const editUser = async (req, res) => {
 /**
  * Allow admin to change roles of other users
  */
-const changeRole = async (req, res) => {
+const editRole = async (req, res) => {
   //check if user is admin
   if (req.user.user_role !== 'admin') {
     return res.status(403).send('Access denied');
@@ -210,6 +209,7 @@ const changeRole = async (req, res) => {
     if (err) return res.status(500).send(`Database error: ${err}`);
     res.status(200).send('Role updated successfully');
   });
+}
 
 
-module.exports = { upload, uploadImage, predictImage, getUserInfo, getAllUsers, getApiStats, deleteUser, editUser, changeRole };
+module.exports = { upload, uploadImage, predictImage, getUserInfo, getAllUsers, getApiStats, deleteUser, editPassword, editRole };

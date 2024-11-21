@@ -106,18 +106,15 @@ async function resetPassword(req, res) {
 async function changePassword(req, res) {
     const { token, email, password } = req.body;
 
-    try {
-        
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        
-        if (decoded.email !== email) {
-            return res.status(403).send('Invalid token for the provided email');
-        }
-
+    try {  
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);        
         const hashedPassword = await bcrypt.hash(password, 10);
         const userExistsQuery = 'SELECT * FROM User WHERE user_email = ?;';
         const updatePasswordQuery = 'UPDATE User SET user_pass = ? WHERE user_email = ?;';
+
+        if (decoded.email !== email) {
+            return res.status(403).send('Invalid token for the provided email');
+        }
 
         
         db.query(userExistsQuery, [email], (err, results) => {

@@ -3,7 +3,7 @@ require('dotenv').config({ path: './server/.env' });
 const express = require('express');
 const db = require('./db/db');
 const cors = require('cors');
-const { upload, uploadImage, predictImage, getUserInfo, getAllUsers, getApiStats, deleteUser, editUser, changeRole } = require('./controllers/api');
+const { upload, uploadImage, predictImage, getUserInfo, getAllUsers, getApiStats, deleteUser, editPassword, editRole } = require('./controllers/api');
 const { register, login, resetPassword, changePassword, verifyUser } = require('./controllers/auth');
 const { authenticateToken, incrementEndpointCalls } = require('./controllers/middleware')
 
@@ -33,12 +33,12 @@ async function startServer() {
         app.post('/v1/api/predictImage', authenticateToken, upload.single('image'), uploadImage, predictImage, incrementEndpointCalls);
         app.get('/v1/api/getApiStats', authenticateToken, getApiStats, incrementEndpointCalls);
         app.delete('/v1/api/deleteUser', authenticateToken, deleteUser, incrementEndpointCalls);
-        app.patch('/v1/api/editUser', authenticateToken, editUser, incrementEndpointCalls);
-        app.patch('/v1/api/changerole', authenticateToken, changeRole, incrementEndpointCalls);
+        app.patch('/v1/api/editPassword', authenticateToken, editPassword, incrementEndpointCalls);
+        app.patch('/v1/api/editRole', authenticateToken, editRole, incrementEndpointCalls);
 
 
         // TODO: Edit to send documentation on our API
-        app.get('/v1/', (req, res) => {
+        app.get('/', (req, res) => {
             res.send('Welcome to the API server');
         });
 
@@ -51,6 +51,7 @@ async function startServer() {
         app.listen(process.env.PORT, process.env.HOST, () => {
             console.log(`Server running on ${process.env.HOST}: port ${process.env.PORT}!`);
         });
+    
     } catch (error) {
         console.error('Error initializing tables:', error);
         process.exit(1);
