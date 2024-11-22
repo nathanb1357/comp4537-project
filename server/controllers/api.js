@@ -167,13 +167,16 @@ const deleteUser = (req, res) => {
     return res.status(403).send('Access denied');
   }
   const query = 'DELETE FROM User WHERE user_email = ?;';
-  // Extract the email from the request body
-  const { email } = req.body;
+  
+  // Extract the email from the request path parameter
+  const { email } = req.params;
+
   db.query(query, [email], (err) => {
     if (err) return res.status(500).send(`Database error: ${err}`);
     res.status(200).send('User deleted successfully');
   });
-}
+};
+
 
 /**
  * change password of a user

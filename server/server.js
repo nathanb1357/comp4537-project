@@ -39,7 +39,7 @@ async function startServer() {
         app.get('/v1/api/getUserInfo', authenticateToken, getUserInfo, incrementEndpointCalls);
         app.post('/v1/api/predictImage', authenticateToken, upload.single('image'), uploadImage, predictImage, incrementEndpointCalls);
         app.get('/v1/api/getApiStats', authenticateToken, getApiStats, incrementEndpointCalls);
-        app.delete('/v1/api/deleteUser', authenticateToken, deleteUser, incrementEndpointCalls);
+        app.delete('/v1/api/deleteUser/:email', authenticateToken, deleteUser, incrementEndpointCalls);
         app.patch('/v1/api/editPassword', authenticateToken, editPassword, incrementEndpointCalls);
         app.patch('/v1/api/editRole', authenticateToken, editRole, incrementEndpointCalls);
 
