@@ -4,7 +4,7 @@ const express = require('express');
 const db = require('./db/db');
 const cors = require('cors');
 const { upload, uploadImage, predictImage, getUserInfo, getAllUsers, getApiStats, deleteUser, editPassword, editRole } = require('./controllers/api');
-const { register, login, resetPassword, changePassword, verifyUser } = require('./controllers/auth');
+const { register, login, resetPassword, changePassword, verifyUser, logout } = require('./controllers/auth');
 const { authenticateToken, incrementEndpointCalls } = require('./controllers/middleware')
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocs = require('./swagger');
@@ -32,6 +32,7 @@ async function startServer() {
         app.get('/v1/auth/resetPassword/:email', resetPassword, incrementEndpointCalls);
         app.post('/v1/auth/resetPassword', changePassword, incrementEndpointCalls);
         app.get('/v1/auth/verify', authenticateToken, verifyUser, incrementEndpointCalls);
+        app.get('/v1/auth/logout', authenticateToken, logout, incrementEndpointCalls);
 
 
         // api endpoints
