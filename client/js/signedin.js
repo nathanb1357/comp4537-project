@@ -14,28 +14,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  document.getElementById('resetPasswordButton').addEventListener('click', function () {
+  document.getElementById('logout').addEventListener('click', function () {
+    // Update with backend endpoint
     localStorage.clear();
     window.location.href = 'index.html';
   });
 
-  // Retrieve and display profile data from localStorage
-  const userData = localStorage.getItem("userToken");
-  //check if token is still valid
-  if (!userData) {
-    window.location.href = "register.html";
-  }
-
-  if (userData.expiry < Date.now()) {
-    alert("Your session has expired. Please log in again.");
-    window.location.href = "register.html";
-  }
-
-  fetch(api + '/auth/userInfo/', {
+  fetch(api + '/auth/verify', {
     method: 'GET',
+    credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + userData
+      'Content-Type': 'application/json'
     }
   })
     .then(response => response.json())
@@ -48,11 +37,43 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("profileEmail").textContent = data.user_email || "N/A";
       document.getElementById("apiUsage").textContent = data.user_calls || "N/A";
       if (data.user_role == "admin") {
+        fetch(api + '/api/getApiStats', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          let table = document.getElementById("apiTable");
+          let header = table.createTHead();
+          let headerRow = header.insertRow(0);
+          let headerCell1 = headerRow.insertCell(0);
+          let headerCell2 = headerRow.insertCell(1);
+          let headerCell3 = headerRow.insertCell(2);
+          headerCell1.textContent = "Method";
+          headerCell2.textContent = "Endpoint";
+          headerCell3.textContent = "Calls";
+          data.forEach(api => { 
+            let row = table.insertRow(-1);
+            let cell1 = row.insertCell(0);
+            let cell2 = row.insertCell(1);
+            let cell3 = row.insertCell(2);
+            cell1.textContent = api.enpoint_method;
+            cell2.textContent = api.endpoint_path;
+            cell3.textContent = api.endpoint_calls;
+          });
+        })
+        .catch(error => {
+          console.error("Error:", error);
+          alert("An error occurred. Please try again.");
+        });
         fetch(api + '/auth/users', {
           method: 'GET',
+          credentials: 'include',
           headers: {
-            'Content-Type': 'application/json',
-            "authorization": "Bearer " + userData
+            'Content-Type': 'application/json'
           }
         })
           .then(response => response.json())
@@ -63,17 +84,61 @@ document.addEventListener("DOMContentLoaded", function () {
             let headerCell1 = headerRow.insertCell(0);
             let headerCell2 = headerRow.insertCell(1);
             let headerCell3 = headerRow.insertCell(2);
+            let headerCell4 = headerRow.insertCell(3);
             headerCell1.textContent = "User ID";
             headerCell2.textContent = "User Email";
             headerCell3.textContent = "User Calls";
+            headerCell4.textContent = "User Role";
             data.forEach(user => {
               let row = table.insertRow(-1);
               let cell1 = row.insertCell(0);
               let cell2 = row.insertCell(1);
               let cell3 = row.insertCell(2);
+              let cell4 = row.insertCell(3);
               cell1.textContent = user.user_id;
               cell2.textContent = user.user_email;
               cell3.textContent = user.user_calls;
+              cell4.textContent = user.user_role;
+              cell4.contentEditable = true;
+              let select = document.createElement("select");
+              let optionAdmin = document.createElement("option");
+              optionAdmin.value = "admin";
+              optionAdmin.text = "Admin";
+              let optionUser = document.createElement("option");
+              optionUser.value = "user";
+              optionUser.text = "User";
+
+              if (user.user_role === "admin") {
+                optionAdmin.selected = true;
+              } else {
+                optionUser.selected = true;
+              }
+
+              select.appendChild(optionAdmin);
+              select.appendChild(optionUser);
+              row.cells[3].replaceChild(select, row.cells[3].childNodes[0]);
+
+              select.addEventListener("change", function () {
+                fetch(api + '/auth/updateUserRole', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    "authorization": "Bearer " + userData
+                  },
+                  body: JSON.stringify({
+                    user_id: user.user_id,
+                    user_role: select.value
+                  })
+                })
+                  .then(response => response.text())
+                  .then(data => {
+                    alert(data);
+                  })
+                  .catch(error => {
+                    console.error("Error:", error);
+                    alert("An error occurred. Please try again.");
+                  });
+              });
             });
           })
           .catch(error => {
@@ -88,7 +153,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-document.getElementById("uploadImageButton").addEventListener("click", function () {
+document.getElementById("predictImageButton").addEventListener("click", function (event) {
+  event.preventDefault();
   const file = document.getElementById("profileImage").files[0];
   if (!file) {
     alert("No file selected.");
@@ -98,33 +164,17 @@ document.getElementById("uploadImageButton").addEventListener("click", function 
   const formData = new FormData();
   formData.append('file', file);
 
-  fetch(api + '/auth/uploadImage', {
+  fetch(api + '/auth/predictImage', {
     method: 'POST',
+    credentials: 'include',
     headers: {
-      "authorization": "Bearer " + localStorage.getItem("userToken")
+      'Content-Type': 'application/json',
     },
     body: formData
   })
     .then(response => response.text())
     .then(data => {
       alert(data);
-    })
-    .catch(error => {
-      console.error("Error:", error);
-      alert("An error occurred. Please try again.");
-    });
-});
-
-document.getElementById("predictImageButton").addEventListener("click", function () {
-  fetch(api + '/api/predictImage', {
-    method: 'POST',
-    headers: {
-      Authorization: 'Bearer ' + localStorage.getItem("userToken")
-    }
-  })
-    .then(response => response.text())
-    .then(data => {
-      document.getElementById("result").textContent = data;
     })
     .catch(error => {
       console.error("Error:", error);
