@@ -139,16 +139,10 @@ async function changePassword(req, res) {
 async function verifyUser(req, res) {
     try {
         const { userId, email, role } = req.user;
-
-        const user = {
-            userId,
-            email,
-            role,
-        };
-
-        res.status(200).json({message: 'User verified', user});
+        const user = { userId, email, role };
+        res.status(200).json({ message: 'User verified', user });
     } catch (err) {
-        return res.status(500).json({ message: `Error verifying user: ${err.message}` });
+        return res.status(500).json({ error: `Error verifying user: ${err.message}` });
     }
 }
 

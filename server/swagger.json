@@ -730,18 +730,44 @@
         }
       }
     },
-    "/deleteUser": {
+    "/api/deleteUser/{email}": {
       "delete": {
-        "summary": "Delete a user",
+        "tags": [
+          "api"
+        ],
+        "summary": "Delete a user account",
         "description": "Delete a user from the database. Requires admin privileges.",
         "security": [
           {
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "example": "user@example.com"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "User deleted successfully"
+            "description": "User deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
           },
           "403": {
             "description": "Access denied",
@@ -760,13 +786,29 @@
             }
           },
           "500": {
-            "description": "Database error"
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Database error: details"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
     },
-    "/editPassword": {
+    "/api/editPassword": {
       "patch": {
+        "tags": [
+          "api"
+        ],
         "summary": "Change user password",
         "description": "Update the password for the authenticated user.",
         "security": [
@@ -792,16 +834,45 @@
         },
         "responses": {
           "200": {
-            "description": "Password updated successfully"
+            "description": "Successful update",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Password updated successfuly"
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Database error: details"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
     },
-    "/editRole": {
+    "/api/editRole": {
       "patch": {
+        "tags": [
+          "api"
+        ],
         "summary": "Edit user role",
         "description": "Allow an admin to change the role of a user.",
         "security": [
@@ -830,13 +901,52 @@
         },
         "responses": {
           "200": {
-            "description": "Role updated successfully"
+            "description": "Successful update",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Role updated successfuly"
+                    }
+                  }
+                }
+              }
+            }
           },
           "403": {
-            "description": "Access denied"
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Admin privilage required"
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "Database error"
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Database error: details"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

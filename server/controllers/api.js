@@ -3,7 +3,6 @@ const multer = require("multer");
 const { exec } = require("child_process");
 const fs = require('fs');
 const path = require('path');
-const { editPassword } = require("./auth");
 
 const uploadPath = path.join(__dirname, "..", "model", "uploads");
 
@@ -115,7 +114,7 @@ const uploadImage = (req, res) => {
 const predictImage = (req, res) => {
   const { userId } = req.user;
   const query = 'SELECT user_image FROM User WHERE user_id = ?';
-  
+
   db.query(query, [userId], (err, results) => {
     if (err) return res.status(500).json({error: `Database error: ${err}`});
     if (!results.length || !results[0].user_image) return res.status(404).json({error: 'No image found for prediction'});
@@ -164,7 +163,7 @@ const getApiStats = (req, res) => {
  */
 const deleteUser = (req, res) => {
   if (!req.user || req.user.user_role !== 'admin') {
-    return res.status(403).send('Access denied');
+    return res.status(403).json({error: 'Access denied'});
   }
   const query = 'DELETE FROM User WHERE user_email = ?;';
   
@@ -172,8 +171,8 @@ const deleteUser = (req, res) => {
   const { email } = req.params;
 
   db.query(query, [email], (err) => {
-    if (err) return res.status(500).send(`Database error: ${err}`);
-    res.status(200).send('User deleted successfully');
+    if (err) return res.status(500).json({error: `Database error: ${err}`});
+    res.status(200).json({message: 'User deleted successfully'});
   });
 };
 
@@ -189,11 +188,11 @@ const editPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const query = 'UPDATE User SET user_pass = ? WHERE user_id = ?;';
     db.query(query, [hashedPassword, userId], (err) => {
-      if (err) return res.status(500).send(`Database error: ${err}`);
-      res.status(200).send('Password updated successfully');
+      if (err) return res.status(500).json({error: `Database error: ${err}`});
+      res.status(200).json({message: 'Password updated successfully'});
     });
   } catch (err) {
-    return res.status(500).send(`internal server error: ${err}`);
+    return res.status(500).json({error: `Internal server error: ${err}`});
   }
 
 }
@@ -204,13 +203,13 @@ const editPassword = async (req, res) => {
 const editRole = async (req, res) => {
   //check if user is admin
   if (req.user.user_role !== 'admin') {
-    return res.status(403).send('Access denied');
+    return res.status(403).json({error: 'Admin permission required to edit role'});
   }
   const { email, role } = req.body;
   const query = 'UPDATE User SET user_role = ? WHERE user_email = ?;';
   db.query(query, [role, email], (err) => {
-    if (err) return res.status(500).send(`Database error: ${err}`);
-    res.status(200).send('Role updated successfully');
+    if (err) return res.status(500).json({error: `Database error: ${err}`});
+    res.status(200).json({message: 'Role updated successfully'});
   });
 }
 
