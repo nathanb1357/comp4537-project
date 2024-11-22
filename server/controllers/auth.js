@@ -138,5 +138,23 @@ async function changePassword(req, res) {
     }
 }
 
+//verify user
+async function verifyUser(req, res) {
+    try {
+        const { userId, email, role } = req.user;
+
+        const user = {
+            userId,
+            email,
+            role,
+        };
+
+        res.status(200).json({message: 'User verified', user});
+    } catch (err) {
+        return res.status(500).json({ message: `Error verifying user: ${err.message}` });
+    }
+}
+
+
   
-module.exports = { register, login, resetPassword, changePassword };
+module.exports = { register, login, resetPassword, changePassword, verifyUser };
