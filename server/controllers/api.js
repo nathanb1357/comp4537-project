@@ -3,7 +3,6 @@ const multer = require("multer");
 const { exec } = require("child_process");
 const fs = require('fs');
 const path = require('path');
-const { editPassword } = require("./auth");
 
 const uploadPath = path.join(__dirname, "..", "model", "uploads");
 
