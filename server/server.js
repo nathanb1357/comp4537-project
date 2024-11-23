@@ -8,6 +8,7 @@ const { register, login, resetPassword, changePassword, verifyUser, logout } = r
 const { authenticateToken, incrementEndpointCalls } = require('./controllers/middleware')
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocs = require('./swagger');
+const cookieParser = require('cookie-parser');
 
 
 async function startServer() {
@@ -16,6 +17,7 @@ async function startServer() {
 
         const app = express();
         app.use(express.json());
+        app.use(cookieParser());
         app.use(cors({
             origin: process.env.DOMAINS,
             methods: ['GET', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
