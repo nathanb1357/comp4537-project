@@ -51,13 +51,10 @@ async function login(req, res) {
 
         // Generate a JWT token with user email, ID and role, valid for 1 hour
         const token = jwt.sign({ userId: user.user_id, email: user.user_email, role: user.user_role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.cookie('token', token, 
-            { httpOnly: true, 
-                secure: true, 
-                maxAge: 3600000,
-            });
-        res.status(200).json({message: 'Login successful'});
+        res.cookie('token', token, { httpOnly: true, secure: true, maxAge: 3600000 });
+        console.log(res.getHeader('Set-Cookie'));
 
+        res.status(200).json({message: 'Login successful'});
     });
 }
 
