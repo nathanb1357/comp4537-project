@@ -7,7 +7,8 @@ const db = require('../db/db');
  * Middleware to authenticate http only JWT tokens.
  */
 function authenticateToken(req, res, next) {
-    const token = req.cookies['token'];
+    console.log(req.cookies);
+    const token = req.cookies?.['token'];
     if (!token) return res.status(401).json({error: 'Access denied. No token provided.'});
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
