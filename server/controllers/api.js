@@ -185,7 +185,7 @@ const predictImage = async (req, res, next) => {
  */
 const getApiStats = async (req, res) => {
 
-  const role = req.user.user_role;
+  const role = req.user.role;
   if (role !== 'admin') {
     return res.status(403).json({error: 'Access denied'});
   }
