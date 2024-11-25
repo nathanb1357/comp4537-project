@@ -3,7 +3,7 @@ const multer = require("multer");
 const { exec } = require("child_process");
 const fs = require('fs');
 const path = require('path');
-import { incrementEndpointCalls, incrementUserCalls } from './middleware';
+const { incrementEndpointCalls, incrementUserCalls } = require('./middleware');
 const USER_LIMIT = 20;
 
 const uploadPath = path.join(__dirname, "..", "model", "uploads");
@@ -278,8 +278,10 @@ const editRole = async (req, res, next) => {
   if (req.user.user_role !== 'admin') {
     return res.status(403).json({error: 'Admin permission required to edit role'});
   }
+  
   const { email, role } = req.body;
   const query = 'UPDATE User SET user_role = ? WHERE user_email = ?;';
+
   db.query(query, [role, email], async (err) => {
     if (err) return res.status(500).json({error: `Database error: ${err}`});
     try {
