@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { passwordEmail } = require('./middleware');
+const { passwordEmail, incrementEndpointCalls } = require('./middleware');
 const db = require('../db/db');
 
 
@@ -20,12 +20,20 @@ async function register(req, res) {
         if (err) return res.status(500).json({ error: `Database error: ${err}` }); // Handle database error
         if (results.length) return res.status(409).json({ error: 'User already exists' }); // Email already registered
 
-        db.query(insertUserQuery, [email, hashedPassword], (err) => {
+        db.query(insertUserQuery, [email, hashedPassword], async (err) => {
             if (err) return res.status(500).json({ error: `Database error: ${err}` }); // Handle database error during insertion
-            res.status(201).json({ message: 'User registered successfully' }); // Success response  
+
+            try {
+                await incrementEndpointCalls(req);
+            } catch (incrementErr) {
+                console.error(`Failed to increment endpoint calls: ${incrementErr.message}`);
+            }
+
+            res.status(201).json({ message: 'User registered successfully' }); // Success response
         });
     });
 }
+
 
 /**
  * Authenticates an existing user during login.
@@ -53,6 +61,11 @@ async function login(req, res) {
         const token = jwt.sign({ userId: user.user_id, email: user.user_email, role: user.user_role }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.cookie('token', token, { httpOnly: true, secure: true, maxAge: 3600000, sameSite: 'None' });
         console.log(res.getHeader('Set-Cookie'));
+        try {
+            await incrementEndpointCalls(req);
+        } catch (incrementErr) {
+            console.error(`Failed to increment endpoint calls: ${incrementErr.message}`);
+        }
 
         res.status(200).json({message: 'Login successful'});
     });
@@ -89,6 +102,11 @@ async function resetPassword(req, res) {
         });
 
         await passwordEmail(email, token);
+        try {
+            await incrementEndpointCalls(req);
+        } catch (incrementErr) {
+            console.error(`Failed to increment endpoint calls: ${incrementErr.message}`);
+        }
         res.status(200).json({message: 'Password reset email sent successfully'});
     } catch (err) {
         return res.status(500).json({error: `Database error: ${err}`});
@@ -112,13 +130,20 @@ async function changePassword(req, res) {
         if (decoded.email !== email) {
             return res.status(403).json({error: 'Invalid token for the provided email'});
         }
-        
-        db.query(userExistsQuery, [email], (err, results) => {
+
+        db.query(userExistsQuery, [email], async (err, results) => {
             if (err) return res.status(500).send(`Database error: ${err}`);
             if (!results.length) return res.status(404).send('User not found');
             
-            db.query(updatePasswordQuery, [hashedPassword, email], (err) => {
+            db.query(updatePasswordQuery, [hashedPassword, email], async (err) => {
                 if (err) return res.status(500).send(`Database error: ${err}`);
+                
+                try {
+                    await incrementEndpointCalls(req);
+                } catch (incrementErr) {
+                    console.error(`Failed to increment endpoint calls: ${incrementErr.message}`);
+                }
+
                 res.status(200).send('Password changed successfully');
             });
         });
@@ -129,6 +154,7 @@ async function changePassword(req, res) {
         return res.status(500).send(`Error verifying token: ${err.message}`);
     }
 }
+
 
 //verify user
 async function verifyUser(req, res, next) {
@@ -148,6 +174,7 @@ async function verifyUser(req, res, next) {
 
 async function logout(req, res, next) {
     res.clearCookie('token', { httpOnly: true, secure: true });
+    await incrementEndpointCalls(req);
     res.status(200).json({message: 'Logout successful'});
     next();
 }

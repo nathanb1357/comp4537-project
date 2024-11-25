@@ -45,48 +45,54 @@ async function passwordEmail(email, token) {
 /**
  * Increment call value in the Endpoint table based on successful request completion
  */
-function incrementEndpointCalls(req, res, next) {
-    const endpoint = req.originalUrl.split('?')[0]; // Extract the endpoint path without query parameters
-    const method = req.method;
-    console.log(`Endpoint called ${method}: ${endpoint}`);
-    const updateQuery = 'UPDATE Endpoint SET endpoint_calls = endpoint_calls + 1 WHERE endpoint_path = ?';
+function incrementEndpointCalls(req) {
+    return new Promise((resolve, reject) => {
+        const endpoint = req.originalUrl.split('?')[0]; // Extract the endpoint path without query parameters
+        const method = req.method;
+        console.log(`Endpoint called ${method}: ${endpoint}`);
 
-    db.query(updateQuery, [endpoint], (err, results) => {
-        if (err) {
-            console.error(`Error updating call count for endpoint ${endpoint}:`, err);
-            return; // Log the error but don't affect the response
-        }
+        const updateQuery = 'UPDATE Endpoint SET endpoint_calls = endpoint_calls + 1 WHERE endpoint_path = ?';
+        db.query(updateQuery, [endpoint], (err, results) => {
+            if (err) {
+                console.error(`Error updating call count for endpoint ${endpoint}:`, err);
+                return reject(err);
+            }
 
-        // If the endpoint path doesn't exist in the table, you might want to insert it
-        if (results.affectedRows === 0) {
-            const insertQuery = 'INSERT INTO Endpoint (endpoint_path, endpoint_method) VALUES (?, ?)';
-            db.query(insertQuery, [endpoint, method], (insertErr) => {
-                if (insertErr) {
-                    console.error(`Error inserting new endpoint ${endpoint}:`, insertErr);
-                }
-            });
-        }
-    })
-
-    next();
+            // If the endpoint path doesn't exist in the table, insert it
+            if (results.affectedRows === 0) {
+                const insertQuery = 'INSERT INTO Endpoint (endpoint_path, endpoint_method) VALUES (?, ?)';
+                db.query(insertQuery, [endpoint, method], (insertErr) => {
+                    if (insertErr) {
+                        console.error(`Error inserting new endpoint ${endpoint}:`, insertErr);
+                        return reject(insertErr);
+                    }
+                    resolve(); // Resolve once the insert query completes
+                });
+            } else {
+                resolve(); // Resolve if the update query was successful
+            }
+        });
+    });
 }
+
 
 
 /**
  * Increases the amount of calls a user has requested
  */
-function incrementUserCalls(req, res, next) {
-    const { userId } = req.user;
-    const updateQuery = `UPDATE User SET user_calls = user_calls + 1 WHERE user_id = ?`;
+function incrementUserCalls(req) {
+    return new Promise((resolve, reject) => {
+        const { userId } = req.user;
+        const updateQuery = `UPDATE User SET user_calls = user_calls + 1 WHERE user_id = ?`;
 
-    db.query(updateQuery, [CALL_LIMIT, userId], (err, results) => {
-        if (err) {
-            console.error(`Error updating call count for user ${userId}:`, err);
-            return res.status(500).json({ error: 'Database error occurred.' });
-        }
+        db.query(updateQuery, [userId], (err, results) => {
+            if (err) {
+                console.error(`Error updating call count for user ${userId}:`, err);
+                return reject(new Error('Database error occurred.'));
+            }
 
-        // Pass control to the next middleware or route handler
-        next();
+            resolve();
+        });
     });
 }
 

@@ -3,6 +3,7 @@ const multer = require("multer");
 const { exec } = require("child_process");
 const fs = require('fs');
 const path = require('path');
+import { incrementEndpointCalls, incrementUserCalls } from './middleware';
 const USER_LIMIT = 20;
 
 const uploadPath = path.join(__dirname, "..", "model", "uploads");
@@ -28,61 +29,74 @@ const upload = multer({ storage: storage });
  * Includes user ID, email, calls, and role.
  * Checks if user is over the USER_LIMIT and adds an overLimit field to the response.
  */
-async function getUserInfo(req, res, next) {
+async function getUserInfo(req, res) {
   const { userId } = req.user; 
   const userQuery = 'SELECT user_id, user_email, user_calls, user_role FROM User WHERE user_id = ?;';
 
-  db.query(userQuery, [userId], (err, results) => {
-      if (err) return res.status(500).json({error: `Database error: ${err}`}); 
-      if (!results.length) return res.status(404).json({error: 'User not found'}); 
+  try {
+      // Convert db.query to a promise-based call
+      const results = await new Promise((resolve, reject) => {
+          db.query(userQuery, [userId], (err, results) => {
+              if (err) return reject(err); 
+              resolve(results);
+          });
+      });
 
-      // create a overLimit field in the json and set to true if user is over USER_LIMIT calls
-      if (results[0].user_calls > USER_LIMIT) {
-        results[0].overLimit = true;
-      } else {
-        results[0].overLimit = false;
+      if (!results.length) {
+          return res.status(404).json({ error: 'User not found' });
       }
 
       const user = results[0];
-      res.json(user);
-  });
+      user.overLimit = user.user_calls > USER_LIMIT; 
 
-  next();
+      try {
+          await incrementEndpointCalls(req);
+          await incrementUserCalls(req);
+      } catch (incrementErr) {
+          console.error(`Failed to increment endpoint calls: ${incrementErr.message}`);
+      }
+
+    
+      res.json(user);
+  } catch (err) {
+      console.error('Error fetching user info:', err);
+      res.status(500).json({ error: `Internal server error: ${err.message}` });
+  }
 }
+
 
 /**
  * Get information about all users in the system.
  * Requires admin privilages to access.
  */
-async function getAllUsers(req, res, next) {
-  // Extract the token from the Authorization header
-  
-  const role = req.user.user_role;
-  if (role !== 'admin') {
-    return res.status(403).json({error: 'Access denied'});
+async function getAllUsers(req, res) {
+  const { user_role } = req.user; 
+
+  if (user_role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied' }); // only admin
   }
 
-  try { 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);     
-      const userRoleQuery = 'SELECT user_role FROM User WHERE user_id = ?;';
-
-      db.query(userRoleQuery, [decoded.userId], (err, results) => {
-          if (err) return res.status(500).json({ error: `Database error: ${err}` });
-          if (!results.length || results[0].user_role !== 'admin') {
-            return res.status(403).json({ error: 'Access denied' });
-          }
-
-          const allUsersQuery = 'SELECT user_id, user_email, user_calls, user_role FROM User;';
-          db.query(allUsersQuery, (err, users) => {
-              if (err) return res.status(500).json({ error: `Database error: ${err}` });
-              res.status(200).json(users);
-          });
+  try {
+    // Query to fetch all users
+    const allUsersQuery = 'SELECT user_id, user_email, user_calls, user_role FROM User;';
+    const users = await new Promise((resolve, reject) => {
+      db.query(allUsersQuery, (err, results) => {
+        if (err) return reject(err); // Reject promise if there's an error
+        resolve(results); // Resolve with the results
       });
-      next();
-  } catch (error) {
-      res.status(401).json({ error: 'Invalid or expired token' });
+    });
+
+    await incrementEndpointCalls(req);
+    await incrementUserCalls(req);
+
+    // Return the users as a response
+    res.status(200).json(users);
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
+
 
 
 /**
@@ -125,18 +139,18 @@ const uploadImage = (req, res, next) => {
  * Retrieves the stored image path, then runs a prediction command with the Python script.
  * Returns prediction results in JSON format, including predicted class and confidences.
  */
-const predictImage = (req, res, next) => {
+const predictImage = async (req, res, next) => {
   const { userId } = req.user;
   const query = 'SELECT user_image FROM User WHERE user_id = ?';
 
-  db.query(query, [userId], (err, results) => {
+  db.query(query, [userId], async (err, results) => {
     if (err) return res.status(500).json({error: `Database error: ${err}`});
     if (!results.length || !results[0].user_image) return res.status(404).json({error: 'No image found for prediction'});
 
     const imagePath = results[0].user_image;
 
     // Step 2: Run the prediction command with the retrieved image path
-    exec(`python3 server/model/model.py ${imagePath}`, (error, stdout, stderr) => {
+    exec(`python3 server/model/model.py ${imagePath}`, async (error, stdout, stderr) => {
       if (error) {
         console.error(`Prediction error: ${error}`);
         return res.status(500).json({error: `Server error ${error}`});
@@ -145,7 +159,14 @@ const predictImage = (req, res, next) => {
       try {
         // Parse the JSON output from Python
         const predictionResult = JSON.parse(stdout.trim());
-        
+
+        try {
+          await incrementEndpointCalls(req); 
+          await incrementUserCalls(req);
+        } catch (incrementErr) {
+          console.error(`Failed to increment calls: ${incrementErr.message}`);
+        }
+
         res.json({
           predicted_class: predictionResult.predicted_class,
           confidence: predictionResult.confidence,
@@ -158,8 +179,7 @@ const predictImage = (req, res, next) => {
     });
   });
 
-  next();
-}
+};
 
 /**
  * Returns statistics about all API usage from Endpoint table.

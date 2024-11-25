@@ -29,22 +29,22 @@ async function startServer() {
         app.use('/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
         // auth endpoints
-        app.post('/v1/auth/register', register, incrementEndpointCalls);
-        app.post('/v1/auth/login', login, incrementEndpointCalls);
-        app.get('/v1/auth/resetPassword/:email', resetPassword, incrementEndpointCalls);
-        app.post('/v1/auth/resetPassword', changePassword, incrementEndpointCalls);
-        app.get('/v1/auth/verify', authenticateToken, verifyUser, incrementEndpointCalls);
-        app.get('/v1/auth/logout', authenticateToken, logout, incrementEndpointCalls);
+        app.post('/v1/auth/register', register);
+        app.post('/v1/auth/login', login);
+        app.get('/v1/auth/resetPassword/:email', resetPassword);
+        app.post('/v1/auth/resetPassword', changePassword);
+        app.get('/v1/auth/verify', authenticateToken, verifyUser);
+        app.get('/v1/auth/logout', authenticateToken, logout);
 
 
         // api endpoints
-        app.get('/v1/api/getUsers', authenticateToken, getAllUsers, incrementEndpointCalls);
-        app.get('/v1/api/getUserInfo', authenticateToken, getUserInfo, incrementEndpointCalls);
-        app.post('/v1/api/predictImage', authenticateToken, upload.single('image'), uploadImage, predictImage, incrementEndpointCalls);
-        app.get('/v1/api/getApiStats', authenticateToken, getApiStats, incrementEndpointCalls);
-        app.delete('/v1/api/deleteUser/:email', authenticateToken, deleteUser, incrementEndpointCalls);
-        app.patch('/v1/api/editPassword', authenticateToken, editPassword, incrementEndpointCalls);
-        app.patch('/v1/api/editRole', authenticateToken, editRole, incrementEndpointCalls);
+        app.get('/v1/api/getUsers', authenticateToken, getAllUsers);
+        app.get('/v1/api/getUserInfo', authenticateToken, getUserInfo);
+        app.post('/v1/api/predictImage', authenticateToken, upload.single('image'), uploadImage, predictImage);
+        app.get('/v1/api/getApiStats', authenticateToken, getApiStats);
+        app.delete('/v1/api/deleteUser/:email', authenticateToken, deleteUser);
+        app.patch('/v1/api/editPassword', authenticateToken, editPassword);
+        app.patch('/v1/api/editRole', authenticateToken, editRole);
 
 
         // Error handling middleware
