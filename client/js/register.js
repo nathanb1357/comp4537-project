@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     fetch(api + '/auth/login', {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json'
       },
@@ -53,11 +54,12 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }).then(response => response.json())
           .then(data => {
+            const { user } = data;
             if (data.error) {
               alert(data.error);
               return;
             }
-            if (data.user_role == "admin") {
+            if (user.role == "admin") {
               window.location.href = "signedinAdmin.html"; // Redirect to admin page
             } else {
               window.location.href = "signedinUser.html"; // Redirect to profile page

@@ -14,20 +14,38 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  document.getElementById('logout').addEventListener('click', function () {
-    // Update with backend endpoint
-    localStorage.clear();
-    window.location.href = 'index.html';
+  document.getElementById('logout').addEventListener('click', function (event) {
+    event.preventDefault();
+    fetch(api + '/auth/logout', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(response => response.text())
+      .then(data => {
+        window.location.href = "index.html";
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again.");
+      });
   });
 
-  fetch(api + '/auth/verify', {
+  fetch(api + '/api/getUserInfo', {
     method: 'GET',
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json'
     }
   })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        window.location.href = "index.html";
+      }
+      return response.json();
+    })
     .then(data => {
       if (data.user_role == "admin" && window.location.href.includes("signedinUser.html")) {
         window.location.href = "signedinAdmin.html";
@@ -44,39 +62,50 @@ document.addEventListener("DOMContentLoaded", function () {
             'Content-Type': 'application/json'
           }
         })
-        .then(response => response.json())
-        .then(data => {
-          let table = document.getElementById("apiTable");
-          let header = table.createTHead();
-          let headerRow = header.insertRow(0);
-          let headerCell1 = headerRow.insertCell(0);
-          let headerCell2 = headerRow.insertCell(1);
-          let headerCell3 = headerRow.insertCell(2);
-          headerCell1.textContent = "Method";
-          headerCell2.textContent = "Endpoint";
-          headerCell3.textContent = "Calls";
-          data.forEach(api => { 
-            let row = table.insertRow(-1);
-            let cell1 = row.insertCell(0);
-            let cell2 = row.insertCell(1);
-            let cell3 = row.insertCell(2);
-            cell1.textContent = api.enpoint_method;
-            cell2.textContent = api.endpoint_path;
-            cell3.textContent = api.endpoint_calls;
+          .then(response => {
+            if (!response.ok) {
+              alert("Error with apistats: " + response.json());
+            }
+            return response.json();
+          })
+          .then(data => {
+            let table = document.getElementById("endpointTable");
+            let header = table.createTHead();
+            let headerRow = header.insertRow(0);
+            let headerCell1 = headerRow.insertCell(0);
+            let headerCell2 = headerRow.insertCell(1);
+            let headerCell3 = headerRow.insertCell(2);
+            headerCell1.textContent = "Method";
+            headerCell2.textContent = "Endpoint";
+            headerCell3.textContent = "Calls";
+            data.forEach(api => {
+              let row = table.insertRow(-1);
+              let cell1 = row.insertCell(0);
+              let cell2 = row.insertCell(1);
+              let cell3 = row.insertCell(2);
+              cell1.textContent = api.endpoint_method;
+              cell2.textContent = api.endpoint_path;
+              cell3.textContent = api.endpoint_calls;
+            });
+          })
+          .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred. Please try again.");
           });
-        })
-        .catch(error => {
-          console.error("Error:", error);
-          alert("An error occurred. Please try again.");
-        });
-        fetch(api + '/auth/users', {
+        fetch(api + '/api/getUsers', {
           method: 'GET',
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json'
           }
         })
-          .then(response => response.json())
+          .then(response => {
+            if (!response.ok) {
+              alert("Error with getting users: " + response.json());
+            }
+            return response.json();
+          }
+          )
           .then(data => {
             let table = document.getElementById("userTable");
             let header = table.createTHead();
@@ -119,15 +148,15 @@ document.addEventListener("DOMContentLoaded", function () {
               row.cells[3].replaceChild(select, row.cells[3].childNodes[0]);
 
               select.addEventListener("change", function () {
-                fetch(api + '/auth/updateUserRole', {
-                  method: 'POST',
+                fetch(api + '/api/editRole', {
+                  method: 'PATCH',
+                  credentials: 'include',
                   headers: {
-                    'Content-Type': 'application/json',
-                    "authorization": "Bearer " + userData
+                    'Content-Type': 'application/json'
                   },
                   body: JSON.stringify({
-                    user_id: user.user_id,
-                    user_role: select.value
+                    email: user.user_id,
+                    role: select.value
                   })
                 })
                   .then(response => response.text())
@@ -153,6 +182,26 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+document.getElementById("confirmDeleteAccount").addEventListener("click", function (event) {
+  event.preventDefault();
+  fetch(api + '/api/deleteUser/email=' + document.getElementById("profileEmail").textContent, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+    .then(response => response.json())
+    .then(data => {
+      alert(data);
+      window.location.href = "index.html";
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("An error occurred. Please try again.");
+    });
+});
+
 document.getElementById("predictImageButton").addEventListener("click", function (event) {
   event.preventDefault();
   const file = document.getElementById("profileImage").files[0];
@@ -162,19 +211,18 @@ document.getElementById("predictImageButton").addEventListener("click", function
   }
 
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('image', file);
 
-  fetch(api + '/auth/predictImage', {
+  fetch(api + '/api/predictImage', {
     method: 'POST',
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
     },
     body: formData
   })
     .then(response => response.text())
     .then(data => {
-      alert(data);
+      document.getElementById("predictionResult").textContent = data;
     })
     .catch(error => {
       console.error("Error:", error);
