@@ -137,7 +137,7 @@ const uploadImage = (req, res, next) => {
  * Retrieves the stored image path, then runs a prediction command with the Python script.
  * Returns prediction results in JSON format, including predicted class and confidences.
  */
-const predictImage = async (req, res, next) => {
+const predictImage = async (req, res) => {
   const { userId } = req.user;
   const query = 'SELECT user_image FROM User WHERE user_id = ?';
 
@@ -184,7 +184,6 @@ const predictImage = async (req, res, next) => {
  * 
  */
 const getApiStats = async (req, res) => {
-
   const role = req.user.role;
   if (role !== 'admin') {
     return res.status(403).json({error: 'Access denied'});
@@ -213,9 +212,9 @@ const getApiStats = async (req, res) => {
  * Delete a user from the database.
  * Requires admin privilages to access.
  */
-const deleteUser = async (req, res, next) => {
+const deleteUser = async (req, res) => {
   try {
-    if (!req.user || req.user.user_role !== 'admin') {
+    if (!req.user || req.user.role !== 'admin') {
       return res.status(403).json({error: 'Access denied'});
     }
     const query = 'DELETE FROM User WHERE user_email = ?;';
@@ -236,7 +235,6 @@ const deleteUser = async (req, res, next) => {
   catch (err) {
     return res.status(500).json({error: `Internal server error: ${err}`});
   }
-
 };
 
 
@@ -244,7 +242,7 @@ const deleteUser = async (req, res, next) => {
  * change password of a user
  */
 
-const editPassword = async (req, res, next) => {
+const editPassword = async (req, res) => {
   try{ 
     const { userId } = req.user;
     const { password } = req.body;
@@ -266,16 +264,14 @@ const editPassword = async (req, res, next) => {
   } catch (err) {
     return res.status(500).json({error: `Internal server error: ${err}`});
   }
-
-  next();
 }
 
 /**
  * Allow admin to change roles of other users
  */
-const editRole = async (req, res, next) => {
+const editRole = async (req, res) => {
   //check if user is admin
-  if (req.user.user_role !== 'admin') {
+  if (req.user.role !== 'admin') {
     return res.status(403).json({error: 'Admin permission required to edit role'});
   }
   
@@ -292,8 +288,6 @@ const editRole = async (req, res, next) => {
     }
     res.status(200).json({message: 'Role updated successfully'});
   });
-
-  next();
 }
 
 
