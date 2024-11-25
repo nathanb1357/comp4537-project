@@ -25,7 +25,7 @@ class Database {
             user_id INT AUTO_INCREMENT PRIMARY KEY,
             user_email VARCHAR(255) UNIQUE NOT NULL,
             user_pass VARCHAR(255) NOT NULL,
-            user_calls INT DEFAULT 20,
+            user_calls INT DEFAULT 0,
             user_role ENUM('user', 'admin') DEFAULT 'user',
             user_image VARCHAR(255) DEFAULT NULL
         ) ENGINE=InnoDB;`;
