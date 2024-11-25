@@ -126,11 +126,9 @@ const uploadImage = (req, res, next) => {
     db.query(updateQuery, [newImagePath, userId], (updateErr) => {
       if (updateErr)
         return res.status(500).json({error: `Database error: ${updateErr}`});
-      res.status(200).json({message: "Image uploaded successfully"});
+      next();
     });
   });
-
-  next();
 };
 
 
@@ -185,7 +183,7 @@ const predictImage = async (req, res, next) => {
  * Returns statistics about all API usage from Endpoint table.
  * 
  */
-const getApiStats = (req, res, next) => {
+const getApiStats = async (req, res) => {
 
   const role = req.user.user_role;
   if (role !== 'admin') {
@@ -193,32 +191,52 @@ const getApiStats = (req, res, next) => {
   }
 
   const query = 'SELECT * FROM Endpoint;';
-  db.query(query, (err, results) => {
-    if (err) return res.status(500).json({error: `Database error: ${err}`});
-    res.status(200).json(results);
-  });
+  try {
+    const results = await new Promise((resolve, reject) => {
+      db.query(query, (err, results) => {
+        if (err) return reject(err);
+        resolve(results);
+      });
+    });
 
-  next();
+    await incrementEndpointCalls(req);
+    await incrementUserCalls(req);
+
+    res.status(200).json(results);
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).json({ error: `Database error: ${err}` });
+  }
 }
 
 /**
  * Delete a user from the database.
  * Requires admin privilages to access.
  */
-const deleteUser = (req, res, next) => {
-  if (!req.user || req.user.user_role !== 'admin') {
-    return res.status(403).json({error: 'Access denied'});
+const deleteUser = async (req, res, next) => {
+  try {
+    if (!req.user || req.user.user_role !== 'admin') {
+      return res.status(403).json({error: 'Access denied'});
+    }
+    const query = 'DELETE FROM User WHERE user_email = ?;';
+    
+    const { email } = req.params;
+
+    db.query(query, [email], async (err) => {
+      if (err) return res.status(500).json({error: `Database error: ${err}`});
+      try {
+        await incrementEndpointCalls(req);
+        await incrementUserCalls(req);
+      } catch (incrementErr) {
+        console.error(`Failed to increment calls: ${incrementErr.message}`);
+      }
+      res.status(200).json({message: 'User deleted successfully'});
+    });
   }
-  const query = 'DELETE FROM User WHERE user_email = ?;';
-  
-  const { email } = req.params;
+  catch (err) {
+    return res.status(500).json({error: `Internal server error: ${err}`});
+  }
 
-  db.query(query, [email], (err) => {
-    if (err) return res.status(500).json({error: `Database error: ${err}`});
-    res.status(200).json({message: 'User deleted successfully'});
-  });
-
-  next();
 };
 
 
@@ -232,10 +250,19 @@ const editPassword = async (req, res, next) => {
     const { password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     const query = 'UPDATE User SET user_pass = ? WHERE user_id = ?;';
-    db.query(query, [hashedPassword, userId], (err) => {
-      if (err) return res.status(500).json({error: `Database error: ${err}`});
-      res.status(200).json({message: 'Password updated successfully'});
+    await new Promise((resolve, reject) => {
+      db.query(query, [hashedPassword, userId], (err) => {
+        if (err) return reject(err);
+        resolve();
+      });
     });
+    try {
+      await incrementEndpointCalls(req);
+      await incrementUserCalls(req);
+    } catch (incrementErr) {
+      console.error(`Failed to increment calls: ${incrementErr.message}`);
+    }
+    res.status(200).json({message: 'Password updated successfully'});
   } catch (err) {
     return res.status(500).json({error: `Internal server error: ${err}`});
   }
@@ -253,8 +280,14 @@ const editRole = async (req, res, next) => {
   }
   const { email, role } = req.body;
   const query = 'UPDATE User SET user_role = ? WHERE user_email = ?;';
-  db.query(query, [role, email], (err) => {
+  db.query(query, [role, email], async (err) => {
     if (err) return res.status(500).json({error: `Database error: ${err}`});
+    try {
+      await incrementEndpointCalls(req);
+      await incrementUserCalls(req);
+    } catch (incrementErr) {
+      console.error(`Failed to increment calls: ${incrementErr.message}`);
+    }
     res.status(200).json({message: 'Role updated successfully'});
   });
 

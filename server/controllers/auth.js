@@ -176,7 +176,6 @@ async function logout(req, res, next) {
     res.clearCookie('token', { httpOnly: true, secure: true });
     await incrementEndpointCalls(req);
     res.status(200).json({message: 'Logout successful'});
-    next();
 }
 
   
