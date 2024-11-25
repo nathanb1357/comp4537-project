@@ -70,10 +70,10 @@ async function getUserInfo(req, res) {
  * Requires admin privilages to access.
  */
 async function getAllUsers(req, res) {
-  const { user_role } = req.user; 
-
-  if (user_role !== 'admin') {
-    return res.status(403).json({ error: 'Access denied' }); // only admin
+  
+  const role = req.user.role;
+  if (role !== 'admin') {
+    return res.status(403).json({error: 'Access denied'});
   }
 
   try {
