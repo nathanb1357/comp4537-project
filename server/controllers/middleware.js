@@ -19,18 +19,6 @@ function authenticateToken(req, res, next) {
 }
 
 
-// function authenticateToken(req, res, next) {
-//     const token = req.headers['authorization']?.split(' ')[1];
-//     if (!token) return res.status(401).send('Access denied.');
-  
-//     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-//         if (err) return res.status(403).send('Invalid token.');
-//         req.user = user; 
-//         next();
-//     });
-// }
-
-
 /**
  * Middleware that sends an email to the user to reset their password.
  */
@@ -84,4 +72,30 @@ function incrementEndpointCalls(req, res, next) {
 }
 
 
-module.exports = { authenticateToken, passwordEmail, incrementEndpointCalls }
+/**
+ * Increases the amount of calls a user has requested
+ */
+function incrementUserCalls(req, res, next) {
+    const { userId } = req.user; // Extract user ID from the request object
+    const CALL_LIMIT = 21; // Define the call limit
+
+    // Update user calls and check if limit exceeded in one query
+    const updateQuery = `
+        UPDATE User 
+        SET user_calls = user_calls + 1, 
+            above_limit = IF(user_calls + 1 >= ?, TRUE, FALSE) 
+        WHERE user_id = ?`;
+
+    db.query(updateQuery, [CALL_LIMIT, userId], (err, results) => {
+        if (err) {
+            console.error(`Error updating call count for user ${userId}:`, err);
+            return res.status(500).json({ error: 'Database error occurred.' });
+        }
+
+        // Pass control to the next middleware or route handler
+        next();
+    });
+}
+
+
+module.exports = { authenticateToken, passwordEmail, incrementEndpointCalls, incrementUserCalls }

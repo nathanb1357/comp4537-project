@@ -26,7 +26,7 @@ const upload = multer({ storage: storage });
  * Return user information based on the token.
  * Excludes the password from the response.
  */
-async function getUserInfo(req, res) {
+async function getUserInfo(req, res, next) {
   const { userId } = req.user; 
   const userQuery = 'SELECT user_id, user_email, user_calls, user_role FROM User WHERE user_id = ?;';
 
@@ -38,13 +38,15 @@ async function getUserInfo(req, res) {
       delete user.user_pass; // Remove password from the response
       res.json(user);
   });
+
+  next();
 }
 
 /**
  * Get information about all users in the system.
  * Requires admin privilages to access.
  */
-async function getAllUsers(req, res) {
+async function getAllUsers(req, res, next) {
   // Extract the token from the Authorization header
   
   const role = req.user.user_role;
@@ -68,6 +70,7 @@ async function getAllUsers(req, res) {
               res.status(200).json(users);
           });
       });
+      next();
   } catch (error) {
       res.status(401).json({ error: 'Invalid or expired token' });
   }
@@ -79,7 +82,7 @@ async function getAllUsers(req, res) {
  * If a previous image exists, it will be deleted from the server.
  * Returns a success message upon successful upload and database update.
  */
-const uploadImage = (req, res) => {
+const uploadImage = (req, res, next) => {
   if (!req.file) return res.status(400).json({error: "No file uploaded"});
   const newImagePath = path.join(uploadPath, req.file.filename);
   const { userId } = req.user;
@@ -104,6 +107,8 @@ const uploadImage = (req, res) => {
       res.status(200).json({message: "Image uploaded successfully"});
     });
   });
+
+  next();
 };
 
 
@@ -112,7 +117,7 @@ const uploadImage = (req, res) => {
  * Retrieves the stored image path, then runs a prediction command with the Python script.
  * Returns prediction results in JSON format, including predicted class and confidences.
  */
-const predictImage = (req, res) => {
+const predictImage = (req, res, next) => {
   const { userId } = req.user;
   const query = 'SELECT user_image FROM User WHERE user_id = ?';
 
@@ -144,13 +149,15 @@ const predictImage = (req, res) => {
       }
     });
   });
+
+  next();
 }
 
 /**
  * Returns statistics about all API usage from Endpoint table.
  * 
  */
-const getApiStats = (req, res) => {
+const getApiStats = (req, res, next) => {
 
   const role = req.user.user_role;
   if (role !== 'admin') {
@@ -162,13 +169,15 @@ const getApiStats = (req, res) => {
     if (err) return res.status(500).json({error: `Database error: ${err}`});
     res.status(200).json(results);
   });
+
+  next();
 }
 
 /**
  * Delete a user from the database.
  * Requires admin privilages to access.
  */
-const deleteUser = (req, res) => {
+const deleteUser = (req, res, next) => {
   if (!req.user || req.user.user_role !== 'admin') {
     return res.status(403).json({error: 'Access denied'});
   }
@@ -181,6 +190,8 @@ const deleteUser = (req, res) => {
     if (err) return res.status(500).json({error: `Database error: ${err}`});
     res.status(200).json({message: 'User deleted successfully'});
   });
+
+  next();
 };
 
 
@@ -188,7 +199,7 @@ const deleteUser = (req, res) => {
  * change password of a user
  */
 
-const editPassword = async (req, res) => {
+const editPassword = async (req, res, next) => {
   try{ 
     const { userId } = req.user;
     const { password } = req.body;
@@ -202,12 +213,13 @@ const editPassword = async (req, res) => {
     return res.status(500).json({error: `Internal server error: ${err}`});
   }
 
+  next();
 }
 
 /**
  * Allow admin to change roles of other users
  */
-const editRole = async (req, res) => {
+const editRole = async (req, res, next) => {
   //check if user is admin
   if (req.user.user_role !== 'admin') {
     return res.status(403).json({error: 'Admin permission required to edit role'});
@@ -218,6 +230,8 @@ const editRole = async (req, res) => {
     if (err) return res.status(500).json({error: `Database error: ${err}`});
     res.status(200).json({message: 'Role updated successfully'});
   });
+
+  next();
 }
 
 
