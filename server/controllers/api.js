@@ -46,10 +46,11 @@ async function getUserInfo(req, res) {
  */
 async function getAllUsers(req, res) {
   // Extract the token from the Authorization header
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
   
-  if (!token) return res.status(401).json({ error: 'Access token required' });
+  const role = req.user.user_role;
+  if (role !== 'admin') {
+    return res.status(403).json({error: 'Access denied'});
+  }
 
   try { 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);     
@@ -150,6 +151,12 @@ const predictImage = (req, res) => {
  * 
  */
 const getApiStats = (req, res) => {
+
+  const role = req.user.user_role;
+  if (role !== 'admin') {
+    return res.status(403).json({error: 'Access denied'});
+  }
+
   const query = 'SELECT * FROM Endpoint;';
   db.query(query, (err, results) => {
     if (err) return res.status(500).json({error: `Database error: ${err}`});
