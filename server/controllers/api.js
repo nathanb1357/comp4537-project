@@ -3,6 +3,7 @@ const multer = require("multer");
 const { exec } = require("child_process");
 const fs = require('fs');
 const path = require('path');
+const USER_LIMIT = 20;
 
 const uploadPath = path.join(__dirname, "..", "model", "uploads");
 
@@ -24,7 +25,8 @@ const upload = multer({ storage: storage });
 
 /**
  * Return user information based on the token.
- * Excludes the password from the response.
+ * Includes user ID, email, calls, and role.
+ * Checks if user is over the USER_LIMIT and adds an overLimit field to the response.
  */
 async function getUserInfo(req, res) {
   const { userId } = req.user; 
@@ -34,8 +36,14 @@ async function getUserInfo(req, res) {
       if (err) return res.status(500).json({error: `Database error: ${err}`}); 
       if (!results.length) return res.status(404).json({error: 'User not found'}); 
 
+      // create a overLimit field in the json and set to true if user is over USER_LIMIT calls
+      if (results[0].user_calls > USER_LIMIT) {
+        results[0].overLimit = true;
+      } else {
+        results[0].overLimit = false;
+      }
+
       const user = results[0];
-      delete user.user_pass; // Remove password from the response
       res.json(user);
   });
 }
@@ -174,7 +182,6 @@ const deleteUser = (req, res) => {
   }
   const query = 'DELETE FROM User WHERE user_email = ?;';
   
-  // Extract the email from the request path parameter
   const { email } = req.params;
 
   db.query(query, [email], (err) => {
