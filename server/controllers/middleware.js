@@ -76,15 +76,8 @@ function incrementEndpointCalls(req, res, next) {
  * Increases the amount of calls a user has requested
  */
 function incrementUserCalls(req, res, next) {
-    const { userId } = req.user; // Extract user ID from the request object
-    const CALL_LIMIT = 21; // Define the call limit
-
-    // Update user calls and check if limit exceeded in one query
-    const updateQuery = `
-        UPDATE User 
-        SET user_calls = user_calls + 1, 
-            above_limit = IF(user_calls + 1 >= ?, TRUE, FALSE) 
-        WHERE user_id = ?`;
+    const { userId } = req.user;
+    const updateQuery = `UPDATE User SET user_calls = user_calls + 1 WHERE user_id = ?`;
 
     db.query(updateQuery, [CALL_LIMIT, userId], (err, results) => {
         if (err) {
