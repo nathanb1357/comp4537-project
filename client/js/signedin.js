@@ -52,6 +52,9 @@ document.addEventListener("DOMContentLoaded", function () {
       } else if (data.user_role == "user" && window.location.href.includes("signedinAdmin.html")) {
         window.location.href = "signedinUser.html";
       }
+      if (data.overLimit) {
+        document.getElementById("apiNotification").style.display = "block";
+      }
       document.getElementById("profileEmail").textContent = data.user_email || "N/A";
       document.getElementById("apiUsage").textContent = data.user_calls || "N/A";
       if (data.user_role == "admin") {
@@ -132,10 +135,10 @@ document.addEventListener("DOMContentLoaded", function () {
               let select = document.createElement("select");
               let optionAdmin = document.createElement("option");
               optionAdmin.value = "admin";
-              optionAdmin.text = "Admin";
+              optionAdmin.text = "admin";
               let optionUser = document.createElement("option");
               optionUser.value = "user";
-              optionUser.text = "User";
+              optionUser.text = "user";
 
               if (user.user_role === "admin") {
                 optionAdmin.selected = true;
@@ -155,7 +158,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     'Content-Type': 'application/json'
                   },
                   body: JSON.stringify({
-                    email: user.user_id,
+                    email: user.user_email,
                     role: select.value
                   })
                 })
