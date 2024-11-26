@@ -1,1 +1,1 @@
-export const api = "https://nbartyuk.site/deep-detective";
+export const api = "https://nbartyuk.site/deep-detective/v1";
