@@ -33,11 +33,7 @@ const upload = multer({
 });
 
 // Helper function to validate email and role
-const validateEmailandRole = (email, role) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email)) {
-    throw new Error("Invalid email address.");
-  }
+const validateEmailandRole = (role) => {
   if (!role || !["user", "admin"].includes(role)) {
     throw new Error("Invalid role. Allowed values are 'user' and 'admin'.");
   }
@@ -305,7 +301,7 @@ const editRole = async (req, res) => {
     }
     
     const { email, role } = req.body;
-    validateEmailandRole(email, role);
+    validateEmailandRole(role);
     const query = 'UPDATE User SET user_role = ? WHERE user_email = ?;';
 
     await new Promise((resolve, reject) => {
