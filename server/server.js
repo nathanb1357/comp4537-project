@@ -42,7 +42,7 @@ async function startServer() {
         app.get('/v1/api/getUserInfo', authenticateToken, getUserInfo);
         app.post('/v1/api/predictImage', authenticateToken, upload.single('image'), uploadImage, predictImage);
         app.get('/v1/api/getApiStats', authenticateToken, getApiStats);
-        app.delete('/v1/api/deleteUser/:email', authenticateToken, deleteUser);
+        app.delete('/v1/api/deleteUser', authenticateToken, deleteUser);
         app.patch('/v1/api/editPassword', authenticateToken, editPassword);
         app.patch('/v1/api/editRole', authenticateToken, editRole);
 

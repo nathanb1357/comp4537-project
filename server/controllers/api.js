@@ -214,28 +214,32 @@ const getApiStats = async (req, res) => {
  */
 const deleteUser = async (req, res) => {
   try {
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).json({error: 'Access denied'});
-    }
-    const query = 'DELETE FROM User WHERE user_email = ?;';
-    
-    const { email } = req.params;
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized: User not logged in' })
+    const { userId } = req.user;
 
-    db.query(query, [email], async (err) => {
-      if (err) return res.status(500).json({error: `Database error: ${err}`});
+    // Logs out user
+    res.clearCookie('token', { httpOnly: true, secure: true });
+
+    // Query to delete the user from the database
+    const query = 'DELETE FROM User WHERE user_id = ?;';
+
+    db.query(query, [userId], async (err) => {
+      if (err) return res.status(500).json({ error: `Database error: ${err}` });
+
       try {
+        // Optional: Log or increment API usage if needed
         await incrementEndpointCalls(req);
         await incrementUserCalls(req);
       } catch (incrementErr) {
         console.error(`Failed to increment calls: ${incrementErr.message}`);
       }
-      res.status(200).json({message: 'User deleted successfully'});
+
+      res.status(200).json({ message: 'User deleted successfully' });
     });
+  } catch (err) {
+    return res.status(500).json({ error: `Internal server error: ${err}` });
   }
-  catch (err) {
-    return res.status(500).json({error: `Internal server error: ${err}`});
-  }
-};
+}
 
 
 /**
@@ -270,24 +274,29 @@ const editPassword = async (req, res) => {
  * Allow admin to change roles of other users
  */
 const editRole = async (req, res) => {
-  //check if user is admin
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({error: 'Admin permission required to edit role'});
-  }
-  
-  const { email, role } = req.body;
-  const query = 'UPDATE User SET user_role = ? WHERE user_email = ?;';
-
-  db.query(query, [role, email], async (err) => {
-    if (err) return res.status(500).json({error: `Database error: ${err}`});
-    try {
-      await incrementEndpointCalls(req);
-      await incrementUserCalls(req);
-    } catch (incrementErr) {
-      console.error(`Failed to increment calls: ${incrementErr.message}`);
+  try {
+    //check if user is admin
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({error: 'Admin permission required to edit role'});
     }
-    res.status(200).json({message: 'Role updated successfully'});
-  });
+    
+    const { email, role } = req.body;
+    const query = 'UPDATE User SET user_role = ? WHERE user_email = ?;';
+
+    await new Promise((resolve, reject) => {
+      db.query(query, [role, email], (err, results) => {
+        if (err) return reject(err);
+        resolve(results);
+      })
+    })
+    
+    await incrementEndpointCalls(req);
+    await incrementUserCalls(req);
+    
+    res.status(200).json({ message: 'Role updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: `Failed to update role: ${err}` });
+  }
 }
 
 

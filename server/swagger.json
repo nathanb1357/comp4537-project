@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://nbartyuk.site/v1"
+      "url": "https://nbartyuk.site/deep-detective/v1"
     }
   ],
   "tags": [
@@ -530,8 +530,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized",
+          "404": {
+            "description": "Resource not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -539,23 +539,7 @@
                   "properties": {
                     "error": {
                       "type": "string",
-                      "example": "Access token required"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access denied",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Admin privilage required"
+                      "example": "User not found"
                     }
                   }
                 }
@@ -602,6 +586,22 @@
                   "type": "array",
                   "items": {
                     "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Admin privilage required"
+                    }
                   }
                 }
               }
@@ -730,26 +730,16 @@
         }
       }
     },
-    "/api/deleteUser/{email}": {
+    "/api/deleteUser": {
       "delete": {
         "tags": [
           "api"
         ],
         "summary": "Delete a user account",
-        "description": "Delete a user from the database. Requires admin privileges.",
+        "description": "Delete user account from the database.",
         "security": [
           {
             "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "email",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "example": "user@example.com"
-            }
           }
         ],
         "responses": {
@@ -769,8 +759,8 @@
               }
             }
           },
-          "403": {
-            "description": "Access denied",
+          "401": {
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
@@ -778,7 +768,7 @@
                   "properties": {
                     "error": {
                       "type": "string",
-                      "example": "Admin privilage required"
+                      "example": "User not logged in"
                     }
                   }
                 }
@@ -892,7 +882,8 @@
                     "format": "email"
                   },
                   "role": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "admin"
                   }
                 }
               }
