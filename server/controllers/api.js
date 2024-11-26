@@ -271,7 +271,7 @@ const editPassword = async (req, res) => {
  */
 const editRole = async (req, res) => {
   //check if user is admin
-  if (req.user.role !== 'admin') {
+  if (!req.user || req.user.role !== 'admin') {
     return res.status(403).json({error: 'Admin permission required to edit role'});
   }
   
