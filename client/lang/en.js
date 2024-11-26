@@ -1,32 +1,47 @@
 export const userMessages = {
-    error: {
-      generic: "An error occurred. Please try again.",
-      logout: "Logout failed. Please try again.",
-      noFile: "No file selected.",
-      emailNotFound: "User email not found.",
-      passwordMismatch: "Passwords do not match.",
-      resetFailed: "Error resetting password. Please try again later.",
-      loginFailed: "Error logging in. Please check your email and password.",
-      signupFailed: "Error signing up. Please try again later.",
-      passwordResetFailed: "Failed to send reset password request.",
-    },
-    success: {
-      deleteAccount: "Account deleted successfully.",
-      reset: "Password reset successfully. Redirecting to login...",
-      signup: "Signup successful! Please log in.",
-      passwordReset: "Password reset email sent. Please check your inbox.",
-    },
-    prediction: {
-      predictedClass: "Predicted Class: ",
-      confidence: "Confidence: ",
-      classConfidence: "Class Confidence: ",
-    },
-    alerts: {
-      overLimit: "You have exceeded your API usage limit.",
-      redirectAdmin: "Redirecting to admin page.",
-      redirectUser: "Redirecting to user page.",
-    },
-  };
-  
-  
-  
+  error: {
+    generic: "An error occurred. Please try again.",
+    logoutFailed: "Logout failed. Please try again.",
+    deleteAccountFailed: "Failed to delete account. Please try again.",
+    predictImageFailed: "Failed to predict image.",
+    fetchUserFailed: "Failed to fetch user information. Please try again.",
+    adminDataFetchFailed: "Failed to fetch admin data. Please try again.",
+    noFileSelected: "No file selected. Please upload an image.",
+    emailNotFound: "User email not found. Cannot proceed with the action.",
+    passwordResetFailed: "Failed to reset password.",
+    invalidLoginCredentials: "Invalid email or password. Please try again.",
+    invalidSignupDetails: "Failed to register. Please try again.",
+    resetPasswordRequestFailed: "Failed to send password reset email.",
+    roleUpdateFailed: "Failed to update user role.",
+    passwordMismatch: "Passwords do not match. Please re-enter them.",
+    resetFailed: "Failed to reset password.",
+    loginFailed: "Login failed.",
+    signupFailed: "Failed to register.",
+  },
+  success: {
+    logoutSuccess: "You have been logged out successfully.",
+    deleteAccountSuccess: "Account deleted successfully.",
+    resetPasswordEmailSent: "Password reset email sent successfully.",
+    resetPasswordSuccess: "Password reset successfully. Please log in.",
+    profileImageUploaded: "Profile image uploaded successfully.",
+    roleUpdated: "User role updated successfully.",
+    loginSuccess: "Login successful! Redirecting...",
+    signupSuccess: "Registration successful! Please log in.",
+    passwordReset: "Password changed successfully",
+    reset: "Password reset successfully",
+    signup: "Registration successful",
+  },
+  validation: {
+    passwordMismatch: "Passwords do not match. Please re-enter them.",
+    invalidEmail: "Please enter a valid email address.",
+    noEmailProvided: "Please provide an email address to proceed.",
+    noPasswordProvided: "Please enter your password.",
+    weakPassword: "Password should be at least 8 characters long.",
+  },
+  info: {
+    apiLimitReached: "API usage limit reached. Please upgrade your plan.",
+    adminRedirect: "You are being redirected to the admin dashboard.",
+    userRedirect: "You are being redirected to your user profile.",
+    processingRequest: "Processing your request. Please wait...",
+  },
+};
