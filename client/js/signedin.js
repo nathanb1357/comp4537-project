@@ -137,13 +137,13 @@ class App {
     }
 
     try {
-      const response = await fetch(`${api}/api/resetPassword/${email}`, {
+      const response = await fetch(`${api}/auth/resetPassword/${email}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const message = await response.text();
-      alert(message);
+      const message = await response.json();
+      alert(message.message);
     } catch {
       alert(userMessages.error.generic);
     }
@@ -270,8 +270,17 @@ class App {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: user.user_id, role: select.value }),
-      });
+        body: JSON.stringify({ email: user.user_email, role: select.value })
+      })
+        .then(response => response.json())
+        .then(data => {
+          alert(data.message);
+        }
+        )
+        .catch(error => {
+          console.error("Error:", error);
+          alert("An error occurred. Please try again.");
+        });
     });
 
     cell.appendChild(select);
