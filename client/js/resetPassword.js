@@ -1,4 +1,5 @@
 import { api } from './const.js';
+import { userMessages } from '../lang/en.js';
 
 class PasswordReset {
   constructor() {
@@ -31,21 +32,21 @@ class PasswordReset {
 
     // Basic validation for password match
     if (newPassword !== confirmNewPassword) {
-      alert("Passwords do not match.");
+      alert(userMessages.error.passwordMismatch);
       return;
     }
 
     try {
       const result = await this.resetPassword(newPassword);
       if (result) {
-        alert(result);
+        alert(userMessages.success.reset);
         window.location.href = "register.html";
       } else {
-        alert("Error resetting password. Please try again later.");
+        alert(userMessages.error.resetFailed);
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("An error occurred. Please try again.");
+      alert(userMessages.error.generic);
     }
   }
 
@@ -57,7 +58,7 @@ class PasswordReset {
         token: this.resetToken,
         email: this.email,
         password: newPassword,
-      })
+      }),
     });
 
     if (!response.ok) {

@@ -1,4 +1,5 @@
 import { api } from './const.js';
+import { userMessages } from '../lang/en.js';
 
 class PasswordResetRequest {
   constructor() {
@@ -13,16 +14,18 @@ class PasswordResetRequest {
     const email = document.getElementById("email").value;
 
     try {
-      const response = await this.sendResetPasswordRequest(email);
-      if (response === "Password reset email sent") {
-        alert(response);
+      const responseMessage = await this.sendResetPasswordRequest(email);
+
+      // Show success or failure messages based on the response
+      if (responseMessage === userMessages.success.passwordReset) {
+        alert(userMessages.success.passwordReset);
         window.location.href = "login.html";
       } else {
-        alert(response);
+        alert(responseMessage);
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("An error occurred. Please try again.");
+      alert(userMessages.error.passwordResetFailed);
     }
   }
 
@@ -30,12 +33,12 @@ class PasswordResetRequest {
     const response = await fetch(api + '/auth/resetPassword/' + email, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {
-      throw new Error('Failed to send reset password request');
+      throw new Error(userMessages.error.passwordResetFailed);
     }
 
     return await response.text();

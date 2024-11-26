@@ -1,4 +1,5 @@
 import { api } from './const.js';
+import { userMessages } from '../lang/en.js';
 
 class AuthApp {
   constructor() {
@@ -44,7 +45,7 @@ class AuthApp {
       await action();
     } catch (error) {
       console.error("Error:", error);
-      alert("An error occurred. Please try again.");
+      alert(userMessages.error.generic);
     } finally {
       button.disabled = false;
     }
@@ -66,19 +67,19 @@ class AuthApp {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
       if (!loginResponse.ok) {
         const error = await loginResponse.json();
-        alert("Error: " + error.error);
+        alert(userMessages.error.loginFailed + (error.error ? ` ${error.error}` : ""));
         return;
       }
 
       const verifyResponse = await fetch(api + '/auth/verify', {
         method: 'GET',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
 
       const { user } = await verifyResponse.json();
@@ -90,7 +91,7 @@ class AuthApp {
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("An error occurred. Please try again.");
+      alert(userMessages.error.generic);
     }
   }
 
@@ -109,14 +110,19 @@ class AuthApp {
       const signupResponse = await fetch(api + '/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
-      const data = await signupResponse.text();
-      alert(data.message);
+      if (!signupResponse.ok) {
+        alert(userMessages.error.signupFailed);
+        return;
+      }
+
+      const data = await signupResponse.json();
+      alert(userMessages.success.signup);
     } catch (error) {
       console.error("Error:", error);
-      alert("An error occurred. Please try again.");
+      alert(userMessages.error.generic);
     }
   }
 }
