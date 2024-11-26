@@ -283,17 +283,16 @@ const editRole = async (req, res) => {
     const { email, role } = req.body;
     const query = 'UPDATE User SET user_role = ? WHERE user_email = ?;';
 
-    const queryPromise = await new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       db.query(query, [role, email], (err, results) => {
         if (err) return reject(err);
         resolve(results);
       })
     })
     
-    await queryPromise(query, [role, email]);
     await incrementEndpointCalls(req);
     await incrementUserCalls(req);
-
+    
     res.status(200).json({ message: 'Role updated successfully' });
   } catch (err) {
     res.status(500).json({ error: `Failed to update role: ${err}` });
