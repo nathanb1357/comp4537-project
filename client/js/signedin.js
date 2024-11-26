@@ -105,8 +105,15 @@ class App {
         credentials: 'include',
         body: formData
       });
-      const prediction = await response.text();
-      document.getElementById("predictionResult").textContent = prediction;
+      if (!response.ok) {
+        alert("Failed to predict image.");
+        return;
+      }
+      const prediction = await response.json();
+      const predictionData = JSON.parse(prediction);
+      document.getElementById("predictionResult").textContent = `Predicted Class: ${predictionData.predicted_class}, 
+      Confidence: ${predictionData.confidence}, 
+      Class Confidence: ${predictionData.class_confidence}`;
     } finally {
       loadingAnimation.style.display = "none";
     }
