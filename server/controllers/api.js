@@ -18,8 +18,30 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {cb(null, `${Date.now()}-${file.originalname}`)}
 });
 
-const upload = multer({ storage: storage });
+// Defines the upload process of files.
+const upload = multer({ 
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png/;
+    const mimeType = allowedTypes.test(file.mimetype);
+    if (mimeType) {
+      cb(null, true);
+    } else {
+      cb(new Error("Unsupported file type. Only JPEG and PNG are allowed."));
+    }
+  }
+});
 
+// Helper function to validate email and role
+const validateEmailandRole = (email, role) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRegex.test(email)) {
+    throw new Error("Invalid email address.");
+  }
+  if (!role || !["user", "admin"].includes(role)) {
+    throw new Error("Invalid role. Allowed values are 'user' and 'admin'.");
+  }
+}
 
 // ---------------------------------------------------------------- ENDPOINTS -----------------------------------------------------------------------------
 
@@ -252,12 +274,14 @@ const editPassword = async (req, res) => {
     const { password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     const query = 'UPDATE User SET user_pass = ? WHERE user_id = ?;';
+
     await new Promise((resolve, reject) => {
       db.query(query, [hashedPassword, userId], (err) => {
         if (err) return reject(err);
         resolve();
       });
     });
+
     try {
       await incrementEndpointCalls(req);
       await incrementUserCalls(req);
@@ -281,6 +305,7 @@ const editRole = async (req, res) => {
     }
     
     const { email, role } = req.body;
+    validateEmailandRole(email, role);
     const query = 'UPDATE User SET user_role = ? WHERE user_email = ?;';
 
     await new Promise((resolve, reject) => {
@@ -292,7 +317,7 @@ const editRole = async (req, res) => {
     
     await incrementEndpointCalls(req);
     await incrementUserCalls(req);
-    
+
     res.status(200).json({ message: 'Role updated successfully' });
   } catch (err) {
     res.status(500).json({ error: `Failed to update role: ${err}` });
