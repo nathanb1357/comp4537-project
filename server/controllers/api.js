@@ -284,7 +284,7 @@ const editRole = async (req, res) => {
     const query = 'UPDATE User SET user_role = ? WHERE user_email = ?;';
 
     const queryPromise = await new Promise((resolve, reject) => {
-      db.query(query, params, (err, results) => {
+      db.query(query, [role, email], (err, results) => {
         if (err) return reject(err);
         resolve(results);
       })
