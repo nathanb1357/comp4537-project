@@ -296,7 +296,7 @@ const editRole = async (req, res) => {
 
     res.status(200).json({ message: 'Role updated successfully' });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update role' });
+    res.status(500).json({ error: `Failed to update role: ${err}` });
   }
 }
 
