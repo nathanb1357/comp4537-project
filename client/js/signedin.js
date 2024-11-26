@@ -70,8 +70,7 @@ class App {
 
   async deleteAccount(event) {
     event.preventDefault();
-    const email = document.getElementById("profileEmail").textContent;
-    const response = await fetch(`${api}/api/deleteUser/email=${email}`, {
+    const response = await fetch(`${api}/api/deleteUser`, {
       method: 'DELETE',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
@@ -110,8 +109,8 @@ class App {
         return;
       }
       const prediction = await response.json();
-      const predictionData = JSON.parse(prediction);
-      document.getElementById("predictionResult").textContent = `Predicted Class: ${predictionData.predicted_class}, 
+      const predictionData = prediction;
+      document.getElementById("result").textContent = `Predicted Class: ${predictionData.predicted_class}, 
       Confidence: ${predictionData.confidence}, 
       Class Confidence: ${predictionData.class_confidence}`;
     } finally {
@@ -252,8 +251,11 @@ class App {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: user.user_email, role: select.value })
       })
-        .then(response => response.text())
-        .then(alert)
+        .then(response => response.json())
+        .then(data => {
+          alert(data.message);
+        }
+        )
         .catch(error => {
           console.error("Error:", error);
           alert("An error occurred. Please try again.");
